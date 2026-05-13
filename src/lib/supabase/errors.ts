@@ -15,11 +15,22 @@ const AUTH_MESSAGES: Record<string, string> = {
 };
 
 const PG_MESSAGES: Record<string, string> = {
-  '23505': 'Registro duplicado.',
+  '23505': 'Esse valor já está em uso por outro registro.',
   '23503': 'Operação inválida: referência inexistente.',
   '42501': 'Você não tem permissão para esta ação.',
   PGRST301: 'Sessão expirada. Faça login novamente.',
 };
+
+const PG_HINTS: Array<{ pattern: RegExp; message: string }> = [
+  {
+    pattern: /players_nickname_active_idx/,
+    message: 'Esse apelido já está em uso por outro jogador.',
+  },
+  {
+    pattern: /players_shirt_number_active_idx/,
+    message: 'Esse número de camisa já está em uso por outro jogador.',
+  },
+];
 
 export function mapSupabaseError(error: AnySupabaseError): string {
   if (!error) return 'Ocorreu um erro inesperado.';
@@ -33,6 +44,10 @@ export function mapSupabaseError(error: AnySupabaseError): string {
     const record = error as Record<string, unknown>;
     const code = String(record.code ?? '');
     const message = typeof record.message === 'string' ? record.message : '';
+    const details = typeof record.details === 'string' ? record.details : '';
+    const haystack = `${message} ${details}`;
+    const hint = PG_HINTS.find(({ pattern }) => pattern.test(haystack));
+    if (hint) return hint.message;
     return PG_MESSAGES[code] ?? message ?? 'Erro ao falar com o servidor.';
   }
 

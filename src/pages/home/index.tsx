@@ -1,4 +1,4 @@
-import { LogOut, ShieldCheck, Sparkles } from 'lucide-react';
+import { LogOut, ShieldCheck, Sparkles, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSignOut } from '@/features/auth/api/use-sign-out';
@@ -54,6 +54,11 @@ export function HomePage() {
               {isAdmin ? 'Admin' : profile?.role === 'player' ? 'Jogador' : 'Espectador'}
             </p>
           </div>
+          <Button asChild variant="ghost" size="icon" aria-label="Meu cadastro">
+            <Link to="/me">
+              <User className="size-4" />
+            </Link>
+          </Button>
           <Button
             variant="ghost"
             size="icon"

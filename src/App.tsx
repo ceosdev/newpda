@@ -10,6 +10,7 @@ import { SignupPage } from '@/pages/auth/signup';
 import { PendingApprovalPage } from '@/pages/pending-approval';
 import { AccessDeniedPage } from '@/pages/access-denied';
 import { HomePage } from '@/pages/home';
+import { MePage } from '@/pages/me';
 import { ApprovalsPage } from '@/pages/admin/approvals';
 
 export function App() {
@@ -39,6 +40,7 @@ export function App() {
 
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/me" element={<MePage />} />
         </Route>
 
         <Route element={<RequireAuth requireAdmin />}>
