@@ -68,3 +68,10 @@ export function RedirectIfAuthenticated({ children }: { children: React.ReactNod
   if (session) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
+
+export function RequireSession() {
+  const { data: session, isLoading } = useSession();
+  if (isLoading) return <FullScreenLoader />;
+  if (!session) return <Navigate to="/login" replace />;
+  return <Outlet />;
+}

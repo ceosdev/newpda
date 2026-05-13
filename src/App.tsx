@@ -1,6 +1,10 @@
 import { Route, Routes } from 'react-router-dom';
 import { Providers } from '@/app/providers';
-import { RequireAuth, RedirectIfAuthenticated } from '@/features/auth/components/require-auth';
+import {
+  RequireAuth,
+  RequireSession,
+  RedirectIfAuthenticated,
+} from '@/features/auth/components/require-auth';
 import { LoginPage } from '@/pages/auth/login';
 import { SignupPage } from '@/pages/auth/signup';
 import { PendingApprovalPage } from '@/pages/pending-approval';
@@ -28,8 +32,10 @@ export function App() {
             </RedirectIfAuthenticated>
           }
         />
-        <Route path="/pending-approval" element={<PendingApprovalPage />} />
-        <Route path="/access-denied" element={<AccessDeniedPage />} />
+        <Route element={<RequireSession />}>
+          <Route path="/pending-approval" element={<PendingApprovalPage />} />
+          <Route path="/access-denied" element={<AccessDeniedPage />} />
+        </Route>
 
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HomePage />} />
