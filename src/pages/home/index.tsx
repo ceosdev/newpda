@@ -4,11 +4,16 @@ import { Button } from '@/components/ui/button';
 import { useSignOut } from '@/features/auth/api/use-sign-out';
 import { useCurrentProfile } from '@/features/auth/api/use-current-profile';
 import { usePermissions } from '@/features/auth/hooks/use-permissions';
+import { usePendingProfiles } from '@/features/admin/api/use-pending-profiles';
 
 export function HomePage() {
   const signOut = useSignOut();
   const { data: profile } = useCurrentProfile();
   const { isAdmin, can } = usePermissions();
+  const canManageApprovals = can('manage_approvals');
+  const { data: pending } = usePendingProfiles({ enabled: canManageApprovals });
+  const pendingCount = pending?.length ?? 0;
+  const hasPending = pendingCount > 0;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -20,10 +25,26 @@ export function HomePage() {
           <span className="text-sm font-medium tracking-tight">newpda</span>
         </div>
         <div className="flex items-center gap-1">
-          {can('manage_approvals') ? (
-            <Button asChild variant="ghost" size="icon" aria-label="Aprovações">
+          {canManageApprovals ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="icon"
+              aria-label={
+                hasPending
+                  ? `Aprovações (${pendingCount} pendente${pendingCount > 1 ? 's' : ''})`
+                  : 'Aprovações'
+              }
+              className="relative"
+            >
               <Link to="/admin/approvals">
                 <ShieldCheck className="size-4" />
+                {hasPending ? (
+                  <span
+                    aria-hidden
+                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary ring-2 ring-background"
+                  />
+                ) : null}
               </Link>
             </Button>
           ) : null}

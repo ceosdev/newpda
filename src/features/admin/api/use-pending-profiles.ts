@@ -20,10 +20,15 @@ async function fetchPendingProfiles(): Promise<PendingProfile[]> {
   return data ?? [];
 }
 
-export function usePendingProfiles() {
+type UsePendingProfilesOptions = {
+  enabled?: boolean;
+};
+
+export function usePendingProfiles({ enabled = true }: UsePendingProfilesOptions = {}) {
   return useQuery({
     queryKey: adminKeys.pendingProfiles(),
     queryFn: fetchPendingProfiles,
     staleTime: 10_000,
+    enabled,
   });
 }
