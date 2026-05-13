@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-13 (após entrega da iteração de aprovações admin)
+**Última atualização:** 2026-05-13 (após entrega da tab Negados em /admin/approvals)
 
 ---
 
@@ -22,11 +22,12 @@
   - Forms via React Hook Form + Zod; `mapSupabaseError` traduz códigos do Supabase para PT-BR.
   - Email/senha apenas — sem Google OAuth, sem reset de senha, sem confirmação de email.
 
-- **UI admin — aprovações de usuários** (commit `c30e50e`, badge em `92299d5`)
-  - Rota `/admin/approvals` protegida por `RequireAuth(requireAdmin)`.
-  - Lista de profiles `pending` com sheets bottom-up para aprovar (role picker player/spectator) ou negar (motivo obrigatório, validado por zod).
-  - Chama as RPCs `approve_user` / `deny_user`; cache invalida a lista no sucesso.
-  - Atalho no header da home (ícone escudo) visível só com capability `manage_approvals`; ponto no canto do ícone quando há pendentes.
+- **UI admin — aprovações de usuários** (commit `c30e50e`, badge em `92299d5`, tab Negados em `0cb4497`)
+  - Rota `/admin/approvals` protegida por `RequireAuth(requireAdmin)`, com tabs **Pendentes / Negados**.
+  - Pendentes: sheets bottom-up para aprovar (role picker player/spectator) ou negar (motivo obrigatório, validado por zod).
+  - Negados: cada card mostra o motivo da negação e oferece "Voltar a pendente" (`revoke_approval`) ou "Aprovar" (reusa o sheet de role picker, transição direta `denied → approved`).
+  - Mutations invalidam `adminKeys.all` — abas e ponto da home se mantêm coerentes em qualquer transição.
+  - Atalho no header da home (ícone escudo) visível só com capability `manage_approvals`; ponto no canto do ícone quando há pendentes (não conta negados — atenção é só para fila nova).
   - Componente compartilhado `EmptyState` em `components/shared/` para estados vazios reutilizáveis.
 
 ### Estado do projeto remoto (não-derivável do código)
@@ -51,12 +52,7 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. Tab "Negados" em /admin/approvals (em andamento)
-- Reaproveita a tela atual com Tabs (Pendentes / Negados).
-- Card de negado expõe `denied_reason` e 2 ações: voltar a pendente (`revoke_approval`) ou aprovar direto (`approve_user`, que já lida com `denied → approved`).
-- Plano aprovado pelo usuário em 2026-05-13; implementação em curso.
-
-### 2. Edição self do profile/player (curto)
+### 1. Edição self do profile/player (curto)
 - Tela `/me` para o jogador aprovado editar `display_name`, `avatar_url`, `nickname`, `preferred_position`, `shirt_number`.
 - Usa as RPCs self (`update_my_profile`, `update_my_player`).
 - Upload de avatar para o bucket `avatars` (signed URL ou policy de dono).
