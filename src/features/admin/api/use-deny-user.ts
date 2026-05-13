@@ -20,7 +20,7 @@ export function useDenyUser() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.pendingProfiles() });
+      queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
   });
 }
