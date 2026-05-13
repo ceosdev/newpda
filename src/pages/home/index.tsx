@@ -1,4 +1,4 @@
-import { LogOut, ShieldCheck, Sparkles, User } from 'lucide-react';
+import { LogOut, ShieldCheck, Sparkles, User, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSignOut } from '@/features/auth/api/use-sign-out';
@@ -48,6 +48,11 @@ export function HomePage() {
               </Link>
             </Button>
           ) : null}
+          <Button asChild variant="ghost" size="icon" aria-label="Time">
+            <Link to="/team">
+              <Users className="size-4" />
+            </Link>
+          </Button>
           <div className="hidden text-right sm:block">
             <p className="text-xs font-medium leading-tight">{profile?.display_name}</p>
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
