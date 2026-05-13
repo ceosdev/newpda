@@ -6,7 +6,7 @@ export type ProfileRole = Database['public']['Enums']['profile_role'];
 
 export type Capability =
   | 'access_app'
-  | 'approve_player'
+  | 'manage_approvals'
   | 'manage_players'
   | 'manage_matches'
   | 'manage_admins'

@@ -11,7 +11,7 @@ function computeCapabilities(profile: Profile | null | undefined): Set<Capabilit
   caps.add('edit_self_profile');
 
   if (profile.is_admin) {
-    caps.add('approve_player');
+    caps.add('manage_approvals');
     caps.add('manage_players');
     caps.add('manage_matches');
     caps.add('manage_admins');

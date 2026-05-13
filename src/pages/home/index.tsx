@@ -1,4 +1,5 @@
-import { LogOut, Sparkles } from 'lucide-react';
+import { LogOut, ShieldCheck, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useSignOut } from '@/features/auth/api/use-sign-out';
 import { useCurrentProfile } from '@/features/auth/api/use-current-profile';
@@ -7,7 +8,7 @@ import { usePermissions } from '@/features/auth/hooks/use-permissions';
 export function HomePage() {
   const signOut = useSignOut();
   const { data: profile } = useCurrentProfile();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, can } = usePermissions();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -18,7 +19,14 @@ export function HomePage() {
           </div>
           <span className="text-sm font-medium tracking-tight">newpda</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          {can('manage_approvals') ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Aprovações">
+              <Link to="/admin/approvals">
+                <ShieldCheck className="size-4" />
+              </Link>
+            </Button>
+          ) : null}
           <div className="hidden text-right sm:block">
             <p className="text-xs font-medium leading-tight">{profile?.display_name}</p>
             <p className="text-[10px] uppercase tracking-wide text-muted-foreground">

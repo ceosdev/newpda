@@ -6,6 +6,7 @@ import { SignupPage } from '@/pages/auth/signup';
 import { PendingApprovalPage } from '@/pages/pending-approval';
 import { AccessDeniedPage } from '@/pages/access-denied';
 import { HomePage } from '@/pages/home';
+import { ApprovalsPage } from '@/pages/admin/approvals';
 
 export function App() {
   return (
@@ -32,6 +33,10 @@ export function App() {
 
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HomePage />} />
+        </Route>
+
+        <Route element={<RequireAuth requireAdmin />}>
+          <Route path="/admin/approvals" element={<ApprovalsPage />} />
         </Route>
 
         <Route path="*" element={<RequireAuth />}>
