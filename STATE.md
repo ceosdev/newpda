@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-13 (após entrega da tab Negados em /admin/approvals)
+**Última atualização:** 2026-05-13 (após entrega da edição self em /me)
 
 ---
 
@@ -30,6 +30,14 @@
   - Atalho no header da home (ícone escudo) visível só com capability `manage_approvals`; ponto no canto do ícone quando há pendentes (não conta negados — atenção é só para fila nova).
   - Componente compartilhado `EmptyState` em `components/shared/` para estados vazios reutilizáveis.
 
+- **Edição self do profile/player** (DB em `42bb656`, UI em `05684ba`)
+  - Migrations: `profiles.phone text` (nullable), `profiles.birth_date date` (nullable). RPC `update_my_profile` cresceu para `(text, text, text, date)`; RPC `update_my_player` ganhou `default null` em todos os args.
+  - Rota `/me` protegida por `RequireAuth`, atalho no header da home (ícone User) visível para todo aprovado.
+  - **Form único** (`ProfileForm`) com avatar, nome, data de nascimento, celular, e — se `role='player'` — apelido e posição preferida. Um único botão "Salvar" dispara `update_my_profile` e/ou `update_my_player` em paralelo via `Promise.allSettled`, só onde houve campo `dirty`. Falhas parciais mantêm o que salvou e mostram erro específico.
+  - **Avatar cropper:** Dialog com `react-easy-crop` (nova dep, MIT, ~30KB) — crop circular, drag + zoom slider, canvas extrai 512×512 JPEG quality 0.9. Path fixo `avatars/{userId}/avatar` com cache-bust por timestamp na URL pública.
+  - `mapSupabaseError` agora detecta `players_nickname_active_idx` / `players_shirt_number_active_idx` no message/details e devolve mensagem PT-BR mais específica.
+  - shadcn novos: `select`, `dialog`, `slider`.
+
 ### Estado do projeto remoto (não-derivável do código)
 
 - **Project ref Supabase:** `vtvnjogbtefyhaskhflb` (já linkado via `supabase/.temp`).
@@ -52,29 +60,24 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. Edição self do profile/player (curto)
-- Tela `/me` para o jogador aprovado editar `display_name`, `avatar_url`, `nickname`, `preferred_position`, `shirt_number`.
-- Usa as RPCs self (`update_my_profile`, `update_my_player`).
-- Upload de avatar para o bucket `avatars` (signed URL ou policy de dono).
-
-### 2. UI admin — gerenciamento de role + admin (médio)
+### 1. UI admin — gerenciamento de role + admin (médio)
 - Tela de jogadores aprovados com ações: trocar role, promover/rebaixar admin (chamando `change_user_role` e `set_user_admin`).
 - Atenção: prevenir admin último degradação de si mesmo (regra de negócio que pode estar no RPC; verificar antes).
 
-### 3. Polish do fluxo de auth (médio)
+### 2. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
 - Reset de senha (link por email).
 - Tela "Confirme seu email" + religar Confirm email no painel.
 
-### 4. Domínio de partidas (grande, coração do app)
+### 3. Domínio de partidas (grande, coração do app)
 - Modelagem (matches, attendances, teams), RLS, RPCs.
 - Telas: criar partida, lista, presença, sorteio.
 - Decidir heurística de sorteio depois (skill ainda não está no modelo; pode usar presença + mensalismo).
 
-### 5. Financeiro / mensalidade (grande, posterior)
+### 4. Financeiro / mensalidade (grande, posterior)
 - Marcar pago/atraso, histórico, eventualmente Pix/integração.
 
-### 6. PWA (fase final)
+### 5. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
 - Notificações push ficam para depois (Edge Function + Web Push).
 
