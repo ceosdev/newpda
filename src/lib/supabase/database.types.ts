@@ -275,6 +275,35 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_player_detail: {
+        Args: { p_target: string }
+        Returns: {
+          avatar_url: string
+          birth_date: string
+          display_name: string
+          email: string
+          is_admin: boolean
+          joined_at: string
+          member_since: string
+          nickname: string
+          phone: string
+          player_status: Database["public"]["Enums"]["player_status"]
+          preferred_position: string
+          profile_id: string
+        }[]
+      }
+      list_players_public: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_admin: boolean
+          nickname: string
+          player_status: Database["public"]["Enums"]["player_status"]
+          preferred_position: string
+          profile_id: string
+        }[]
+      }
       revoke_approval: {
         Args: { p_target: string }
         Returns: {
