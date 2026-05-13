@@ -11,7 +11,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:link": "supabase link",
+    "db:push": "supabase db push",
+    "db:diff": "supabase db diff",
+    "gen:types": "supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
+    "promote:admin": "tsx --env-file=.env.local scripts/promote-admin.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.2",
@@ -41,7 +46,9 @@
     "globals": "^15.15.0",
     "prettier": "^3.5.1",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "supabase": "^2.98.2",
     "tailwindcss": "^4.0.6",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0",
     "vite": "^6.1.0"

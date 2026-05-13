@@ -1,0 +1,5 @@
+-- Dev seed file. Intentionally empty.
+--
+-- The first admin is created via `pnpm promote:admin <email>` after the user
+-- signs up through the app. Do not insert into auth.users directly here —
+-- auth users must be created through the Supabase Auth API.
