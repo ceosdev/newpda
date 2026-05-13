@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-13
+**Última atualização:** 2026-05-13 (após entrega da iteração de aprovações admin)
 
 ---
 
@@ -15,12 +15,19 @@
   - Check constraint `profiles_status_invariants` protege coerência de estado — `pending` ⇒ tudo `null`; `approved` ⇒ `role` e `approved_at` setados; `denied` ⇒ `denied_reason` setado. **Nunca editar profiles via Table Editor**, sempre via RPCs ou `pnpm promote:admin`.
   - Tooling: `pnpm db:link/push/diff`, `pnpm gen:types`, `pnpm promote:admin <email>`.
 
-- **Camada de auth no client** (commit `e1da228`)
+- **Camada de auth no client** (commit `e1da228`, ajustes em `8a690ac`)
   - Hooks: `useSession`, `useCurrentProfile`, `usePermissions`, `useSignIn/Up/Out`.
-  - Componentes: `RequireAuth`, `RedirectIfAuthenticated`, `AuthCard`.
+  - Componentes: `RequireAuth`, `RequireSession`, `RedirectIfAuthenticated`, `AuthCard`.
   - Páginas: `/login`, `/signup`, `/pending-approval`, `/access-denied`, `/` (home autenticada com header + logout).
   - Forms via React Hook Form + Zod; `mapSupabaseError` traduz códigos do Supabase para PT-BR.
   - Email/senha apenas — sem Google OAuth, sem reset de senha, sem confirmação de email.
+
+- **UI admin — aprovações de usuários** (commit `c30e50e`, badge em `92299d5`)
+  - Rota `/admin/approvals` protegida por `RequireAuth(requireAdmin)`.
+  - Lista de profiles `pending` com sheets bottom-up para aprovar (role picker player/spectator) ou negar (motivo obrigatório, validado por zod).
+  - Chama as RPCs `approve_user` / `deny_user`; cache invalida a lista no sucesso.
+  - Atalho no header da home (ícone escudo) visível só com capability `manage_approvals`; ponto no canto do ícone quando há pendentes.
+  - Componente compartilhado `EmptyState` em `components/shared/` para estados vazios reutilizáveis.
 
 ### Estado do projeto remoto (não-derivável do código)
 
@@ -44,11 +51,10 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. UI admin — aprovação de usuários (curto, alto valor)
-- Telas para listar `profiles` pending e executar `approve_user` / `deny_user`.
-- Reaproveita as RPCs já existentes; superfície de autorização cresce em zero (RLS já protege).
-- Esboço mobile: lista em cards (nome, email, data) + ações inline; sheet com input de motivo para deny.
-- Dependência: usePermissions já existe. **Pronto para começar quando você aprovar o plano.**
+### 1. Tab "Negados" em /admin/approvals (em andamento)
+- Reaproveita a tela atual com Tabs (Pendentes / Negados).
+- Card de negado expõe `denied_reason` e 2 ações: voltar a pendente (`revoke_approval`) ou aprovar direto (`approve_user`, que já lida com `denied → approved`).
+- Plano aprovado pelo usuário em 2026-05-13; implementação em curso.
 
 ### 2. Edição self do profile/player (curto)
 - Tela `/me` para o jogador aprovado editar `display_name`, `avatar_url`, `nickname`, `preferred_position`, `shirt_number`.
