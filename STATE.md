@@ -57,24 +57,24 @@ Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem suge
 - Usa as RPCs self (`update_my_profile`, `update_my_player`).
 - Upload de avatar para o bucket `avatars` (signed URL ou policy de dono).
 
-### 3. UI admin — gerenciamento de role + admin (médio)
+### 2. UI admin — gerenciamento de role + admin (médio)
 - Tela de jogadores aprovados com ações: trocar role, promover/rebaixar admin (chamando `change_user_role` e `set_user_admin`).
 - Atenção: prevenir admin último degradação de si mesmo (regra de negócio que pode estar no RPC; verificar antes).
 
-### 4. Polish do fluxo de auth (médio)
+### 3. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
 - Reset de senha (link por email).
 - Tela "Confirme seu email" + religar Confirm email no painel.
 
-### 5. Domínio de partidas (grande, coração do app)
+### 4. Domínio de partidas (grande, coração do app)
 - Modelagem (matches, attendances, teams), RLS, RPCs.
 - Telas: criar partida, lista, presença, sorteio.
 - Decidir heurística de sorteio depois (skill ainda não está no modelo; pode usar presença + mensalismo).
 
-### 6. Financeiro / mensalidade (grande, posterior)
+### 5. Financeiro / mensalidade (grande, posterior)
 - Marcar pago/atraso, histórico, eventualmente Pix/integração.
 
-### 7. PWA (fase final)
+### 6. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
 - Notificações push ficam para depois (Edge Function + Web Push).
 
