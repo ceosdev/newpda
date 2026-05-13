@@ -1,35 +1,42 @@
 import { Route, Routes } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Providers } from '@/app/providers';
-
-function HomePlaceholder() {
-  return (
-    <main className="flex min-h-dvh items-center justify-center px-6 py-12">
-      <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
-        <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Sparkles className="size-6" />
-        </div>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight">newpda</h1>
-          <p className="text-sm text-muted-foreground">
-            Gerenciador da pelada — em desenvolvimento. Veja{' '}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">CLAUDE.md</code> para
-            governança técnica.
-          </p>
-        </div>
-        <Button size="lg">Pronto pra primeira partida</Button>
-      </div>
-    </main>
-  );
-}
+import { RequireAuth, RedirectIfAuthenticated } from '@/features/auth/components/require-auth';
+import { LoginPage } from '@/pages/auth/login';
+import { SignupPage } from '@/pages/auth/signup';
+import { PendingApprovalPage } from '@/pages/pending-approval';
+import { AccessDeniedPage } from '@/pages/access-denied';
+import { HomePage } from '@/pages/home';
 
 export function App() {
   return (
     <Providers>
       <Routes>
-        <Route path="/" element={<HomePlaceholder />} />
-        <Route path="*" element={<HomePlaceholder />} />
+        <Route
+          path="/login"
+          element={
+            <RedirectIfAuthenticated>
+              <LoginPage />
+            </RedirectIfAuthenticated>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <RedirectIfAuthenticated>
+              <SignupPage />
+            </RedirectIfAuthenticated>
+          }
+        />
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
+
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<HomePage />} />
+        </Route>
+
+        <Route path="*" element={<RequireAuth />}>
+          <Route path="*" element={<HomePage />} />
+        </Route>
       </Routes>
     </Providers>
   );
