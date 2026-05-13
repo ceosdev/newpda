@@ -468,6 +468,8 @@ Os itens abaixo são **proibidos** no projeto. Se aparecerem num PR, devem ser r
 
 ## 17. Lembretes para o Claude
 
+- **Sempre leia [`STATE.md`](./STATE.md) no início de uma sessão** — é onde fica registrado o que já foi entregue, o que está pendente, e as próximas iterações candidatas. Esse documento aqui (CLAUDE.md) é governança; `STATE.md` é o ponteiro para continuar de onde a sessão anterior parou.
+- **Atualizar `STATE.md` ao fechar cada iteração** — marcar como entregue (com hash do commit), atualizar a data, mover itens entre seções conforme o estado real.
 - Quando em dúvida entre uma instrução pontual e este documento: **pergunte**.
 - Antes de propor mudança em RLS: explique **a nova superfície de autorização em uma frase**.
 - Antes de adicionar lib: explique **por que o que já temos não resolve**.
