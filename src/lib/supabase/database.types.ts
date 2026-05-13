@@ -129,6 +129,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -136,6 +137,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -144,6 +146,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           denied_reason?: string | null
           display_name: string
@@ -151,6 +154,7 @@ export type Database = {
           id: string
           is_admin?: boolean
           onboarded_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["profile_role"] | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
@@ -159,6 +163,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string
           denied_reason?: string | null
           display_name?: string
@@ -166,6 +171,7 @@ export type Database = {
           id?: string
           is_admin?: boolean
           onboarded_at?: string | null
+          phone?: string | null
           role?: Database["public"]["Enums"]["profile_role"] | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
@@ -194,6 +200,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -201,6 +208,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -221,6 +229,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -228,6 +237,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -245,6 +255,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -252,6 +263,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -269,6 +281,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -276,6 +289,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -293,6 +307,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -300,6 +315,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
@@ -337,9 +353,9 @@ export type Database = {
       }
       update_my_player: {
         Args: {
-          p_nickname: string
-          p_preferred_position: string
-          p_shirt_number: number
+          p_nickname?: string
+          p_preferred_position?: string
+          p_shirt_number?: number
         }
         Returns: {
           archived_at: string | null
@@ -364,11 +380,17 @@ export type Database = {
         }
       }
       update_my_profile: {
-        Args: { p_avatar_url?: string; p_display_name: string }
+        Args: {
+          p_avatar_url?: string
+          p_birth_date?: string
+          p_display_name: string
+          p_phone?: string
+        }
         Returns: {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          birth_date: string | null
           created_at: string
           denied_reason: string | null
           display_name: string
@@ -376,6 +398,7 @@ export type Database = {
           id: string
           is_admin: boolean
           onboarded_at: string | null
+          phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
