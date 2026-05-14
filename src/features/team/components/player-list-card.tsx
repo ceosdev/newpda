@@ -20,7 +20,7 @@ function initialsOf(name: string): string {
 const STATUS_BADGE_CLASS: Record<string, string> = {
   active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
   inactive: 'bg-muted text-muted-foreground',
-  injured: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  injured: 'bg-destructive/10 text-destructive',
 };
 
 type StatSlot = { label: string; value: string };

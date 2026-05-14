@@ -127,6 +127,8 @@ export function PlayerDetailSheet({ targetId, open, onOpenChange }: PlayerDetail
                 displayName={player.display_name}
                 isAdmin={player.is_admin}
                 isSelf={isSelf}
+                currentPosition={player.preferred_position}
+                currentStatus={player.player_status}
                 onClose={() => onOpenChange(false)}
               />
             ) : null}

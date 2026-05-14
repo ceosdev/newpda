@@ -7,6 +7,13 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -19,6 +26,15 @@ import {
 import { useChangeUserRole } from '@/features/admin/api/use-change-user-role';
 import { useSetAdminFlag } from '@/features/admin/api/use-set-admin-flag';
 import { useRevokeApproval } from '@/features/admin/api/use-revoke-approval';
+import {
+  useAdminUpdatePosition,
+  type PreferredPosition,
+} from '@/features/team/api/use-admin-update-position';
+import {
+  useAdminUpdatePlayerStatus,
+  type PlayerStatus,
+} from '@/features/team/api/use-admin-update-player-status';
+import { POSITION_LABELS, PLAYER_STATUS_LABELS } from '@/features/team/lib/labels';
 import type { ProfileRole } from '@/features/auth/types';
 import { mapSupabaseError } from '@/lib/supabase/errors';
 import { cn } from '@/lib/utils';
@@ -27,6 +43,10 @@ const ROLE_LABELS: Record<ProfileRole, string> = {
   player: 'Jogador',
   spectator: 'Espectador',
 };
+
+const NO_POSITION = '__none__';
+const POSITIONS: PreferredPosition[] = ['goalkeeper', 'defender', 'midfielder', 'forward'];
+const STATUSES: PlayerStatus[] = ['active', 'injured', 'inactive'];
 
 type Confirmation =
   | { kind: 'role'; nextRole: ProfileRole }
@@ -39,6 +59,8 @@ type PlayerAdminActionsProps = {
   displayName: string;
   isAdmin: boolean;
   isSelf: boolean;
+  currentPosition: string | null;
+  currentStatus: PlayerStatus;
   onClose: () => void;
 };
 
@@ -47,15 +69,62 @@ export function PlayerAdminActions({
   displayName,
   isAdmin,
   isSelf,
+  currentPosition,
+  currentStatus,
   onClose,
 }: PlayerAdminActionsProps) {
   const navigate = useNavigate();
   const changeRole = useChangeUserRole();
   const setAdmin = useSetAdminFlag();
   const revoke = useRevokeApproval();
+  const updatePosition = useAdminUpdatePosition();
+  const updateStatus = useAdminUpdatePlayerStatus();
   const [pending, setPending] = useState<Confirmation>(null);
 
-  const busy = changeRole.isPending || setAdmin.isPending || revoke.isPending;
+  const busy =
+    changeRole.isPending ||
+    setAdmin.isPending ||
+    revoke.isPending ||
+    updatePosition.isPending ||
+    updateStatus.isPending;
+
+  const handlePositionChange = (rawValue: string) => {
+    const nextPosition = rawValue === NO_POSITION ? null : (rawValue as PreferredPosition);
+    const currentNormalized = (currentPosition ?? null) as PreferredPosition | null;
+    if (nextPosition === currentNormalized) return;
+    updatePosition.mutate(
+      { targetId, position: nextPosition },
+      {
+        onSuccess: () => {
+          toast.success(
+            nextPosition
+              ? `Posição de ${displayName} atualizada para ${POSITION_LABELS[nextPosition]}.`
+              : `${displayName} agora está sem preferência de posição.`,
+          );
+        },
+        onError: (error) => {
+          toast.error(mapSupabaseError(error));
+        },
+      },
+    );
+  };
+
+  const handleStatusChange = (nextStatus: PlayerStatus) => {
+    if (nextStatus === currentStatus) return;
+    updateStatus.mutate(
+      { targetId, status: nextStatus },
+      {
+        onSuccess: () => {
+          toast.success(
+            `Status de ${displayName} atualizado para ${PLAYER_STATUS_LABELS[nextStatus]}.`,
+          );
+        },
+        onError: (error) => {
+          toast.error(mapSupabaseError(error));
+        },
+      },
+    );
+  };
 
   const handleConfirm = () => {
     if (!pending) return;
@@ -165,10 +234,60 @@ export function PlayerAdminActions({
     };
   })();
 
+  const positionValue =
+    currentPosition && (POSITIONS as string[]).includes(currentPosition)
+      ? currentPosition
+      : NO_POSITION;
+
   return (
     <>
       <div className="flex flex-col gap-3 rounded-md border bg-muted/30 p-3">
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ações de admin</p>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-xs">Posição</Label>
+          <Select value={positionValue} onValueChange={handlePositionChange} disabled={busy}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder="Sem preferência" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_POSITION}>Sem preferência</SelectItem>
+              {POSITIONS.map((pos) => (
+                <SelectItem key={pos} value={pos}>
+                  {POSITION_LABELS[pos]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label className="text-xs">Status na pelada</Label>
+          <RadioGroup
+            value={currentStatus}
+            onValueChange={(value) => handleStatusChange(value as PlayerStatus)}
+            className="grid grid-cols-3 gap-2"
+            disabled={busy}
+          >
+            {STATUSES.map((s) => (
+              <div
+                key={s}
+                className={cn(
+                  'flex items-center gap-2 rounded-md border bg-background px-3 py-2',
+                  s === currentStatus && 'border-primary bg-primary/5',
+                )}
+              >
+                <RadioGroupItem id={`detail-status-${targetId}-${s}`} value={s} />
+                <Label
+                  htmlFor={`detail-status-${targetId}-${s}`}
+                  className="flex-1 cursor-pointer text-xs font-medium"
+                >
+                  {PLAYER_STATUS_LABELS[s]}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
 
         <div className="flex flex-col gap-2">
           <Label className="text-xs">Role</Label>
