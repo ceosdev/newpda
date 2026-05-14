@@ -68,6 +68,44 @@ export type Database = {
           },
         ]
       }
+      matches: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          match_date: string
+          match_time: string
+          status: Database["public"]["Enums"]["match_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          match_date: string
+          match_time: string
+          status?: Database["public"]["Enums"]["match_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          match_date?: string
+          match_time?: string
+          status?: Database["public"]["Enums"]["match_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           archived_at: string | null
@@ -301,6 +339,43 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      close_match: {
+        Args: { p_match_id: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          match_date: string
+          match_time: string
+          status: Database["public"]["Enums"]["match_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_match: {
+        Args: { p_match_date: string; p_match_time: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          match_date: string
+          match_time: string
+          status: Database["public"]["Enums"]["match_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      delete_match: { Args: { p_match_id: string }; Returns: undefined }
       deny_user: {
         Args: { p_reason: string; p_target: string }
         Returns: {
@@ -432,6 +507,24 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_match_schedule: {
+        Args: { p_match_date: string; p_match_id: string; p_match_time: string }
+        Returns: {
+          created_at: string
+          created_by: string
+          id: string
+          match_date: string
+          match_time: string
+          status: Database["public"]["Enums"]["match_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "matches"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_my_player: {
         Args: {
           p_nickname?: string
@@ -529,6 +622,7 @@ export type Database = {
         | "admin_granted"
         | "admin_revoked"
         | "player_status_changed"
+      match_status: "open" | "closed"
       player_status: "active" | "inactive" | "injured"
       profile_role: "player" | "spectator"
       profile_status: "pending" | "approved" | "denied"
@@ -668,6 +762,7 @@ export const Constants = {
         "admin_revoked",
         "player_status_changed",
       ],
+      match_status: ["open", "closed"],
       player_status: ["active", "inactive", "injured"],
       profile_role: ["player", "spectator"],
       profile_status: ["pending", "approved", "denied"],
