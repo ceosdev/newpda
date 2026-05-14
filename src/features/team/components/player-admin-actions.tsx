@@ -290,7 +290,7 @@ export function PlayerAdminActions({
         </div>
 
         <div className="flex flex-col gap-2">
-          <Label className="text-xs">Role</Label>
+          <Label className="text-xs">Função</Label>
           <RadioGroup
             value="player"
             onValueChange={(value) => {
