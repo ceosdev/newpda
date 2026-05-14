@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-14 (após entrega da Spec 002 — presença persistida com optimistic UI e tela de detalhes)
+**Última atualização:** 2026-05-14 (após rebrand para "Pelada dos Amigos" e persistência de tema no profile)
 
 ---
 
@@ -40,6 +40,14 @@
   - Admin mutations agora invalidam `teamKeys.all` além das chaves de admin.
   - shadcn novos: `switch`, `alert-dialog`.
   - **Limitação conhecida:** UI para gerenciar **espectadores** não existe. Spectator que vira player só com SQL direto. Entra como iteração futura.
+
+- **Rebrand "Pelada dos Amigos" + tema persistido** (DB em `f9bbbdc`, UI em `6de6aac`)
+  - **Identidade visual:** logo redonda em `public/logo.jpeg`, usada como favicon e em três pontos da UI (header da home 36px, hero da home 112px, AuthCard 96px). Textos "newpda" foram removidos do header (a logo já carrega o nome); no desktop ≥ `sm` aparece "Pelada dos Amigos" ao lado da logo no header da home (mobile mantém só a imagem).
+  - **Paleta:** `--primary` virou azul marinho da logo. Light: `220 78% 22%`. Dark: `220 70% 60%` (mais claro para contrastar com fundo escuro). `--ring` segue cada um. `--success`/`--warning`/`--destructive` ficaram intactos — só o primary mudou.
+  - **Tema:** sistema agora é só **light × dark** (a opção "Sistema" foi removida). Default é `dark`. Boot script no `index.html` aplica `.dark` quando não houver `localStorage` `'light'`. Storage key renomeada de `newpda-theme` para `pelada-theme`. `ThemeToggle` (em `components/shared/`) é um botão único que cicla entre os dois com ícones `Sun`/`Moon`.
+  - **Persistência por usuário:** nova migration `20260514130000_profiles_theme_preference` adicionou enum `theme_preference('light','dark')` e coluna `profiles.theme_preference NOT NULL default 'dark'`. RPC dedicada `update_my_theme_preference(p_value)` `security definer` isola a escrita (não passa pelo `update_my_profile`).
+  - **Fluxo de sync:** ao carregar profile no client, `ThemeProvider` adota a preferência salva se diferir do estado local; ao clicar o toggle, atualiza `localStorage` + estado + dispara a mutation se houver usuário logado. Visitantes anônimos seguem com localStorage só.
+  - Pequenas mudanças no [`auth-card.tsx`](src/features/auth/components/auth-card.tsx) (logo substitui o `Sparkles` antigo) e em [`providers.tsx`](src/app/providers.tsx) (`Toaster` lê `theme` direto agora que não há mais `resolvedTheme`).
 
 - **Presença em peladas (Spec 002)** (DB em `1b5a511`, UI em `b20303a`)
   - 3 migrations: enum `attendance_response('going','maybe','declined')`, tabela `match_attendances` com PK composta `(match_id, profile_id)` + FK cascade para `matches`; trigger em `players` que **apaga as respostas** quando o jogador sai do roster ativo (`active`/`injured` → `inactive` ou `archived_at` setado); view `matches_with_counts` (matches + 3 colunas agregadas via lateral) e RPCs `set_my_attendance` (upsert validando player + status + `match.status='open'`) e `list_match_attendances` (joined com avatar/apelido/posição).
