@@ -191,6 +191,58 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_update_player_position: {
+        Args: { p_position?: string; p_target_profile: string }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          is_monthly: boolean
+          joined_at: string
+          nickname: string | null
+          player_status: Database["public"]["Enums"]["player_status"]
+          player_status_changed_at: string | null
+          player_status_note: string | null
+          preferred_position: string | null
+          profile_id: string
+          shirt_number: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "players"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_update_player_status: {
+        Args: {
+          p_note?: string
+          p_status: Database["public"]["Enums"]["player_status"]
+          p_target_profile: string
+        }
+        Returns: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          is_monthly: boolean
+          joined_at: string
+          nickname: string | null
+          player_status: Database["public"]["Enums"]["player_status"]
+          player_status_changed_at: string | null
+          player_status_note: string | null
+          preferred_position: string | null
+          profile_id: string
+          shirt_number: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "players"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       approve_user: {
         Args: {
           p_role: Database["public"]["Enums"]["profile_role"]
