@@ -13,6 +13,7 @@ import { HomePage } from '@/pages/home';
 import { MePage } from '@/pages/me';
 import { ApprovalsPage } from '@/pages/admin/approvals';
 import { TeamPage } from '@/pages/team';
+import { MatchesPage } from '@/pages/matches';
 
 export function App() {
   return (
@@ -43,6 +44,7 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/me" element={<MePage />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/matches" element={<MatchesPage />} />
         </Route>
 
         <Route element={<RequireAuth requireAdmin />}>
