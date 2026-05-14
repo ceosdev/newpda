@@ -13,7 +13,7 @@
   --popover: 0 0% 100%;
   --popover-foreground: 220 13% 10%;
 
-  --primary: 142 70% 38%;
+  --primary: 220 78% 22%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 220 10% 95%;
@@ -33,7 +33,7 @@
 
   --border: 220 10% 90%;
   --input: 220 10% 90%;
-  --ring: 142 70% 40%;
+  --ring: 220 78% 32%;
 
   --radius: 0.625rem;
 }
@@ -48,7 +48,7 @@
   --popover: 220 13% 12%;
   --popover-foreground: 210 14% 95%;
 
-  --primary: 142 65% 50%;
+  --primary: 220 70% 60%;
   --primary-foreground: 220 13% 8%;
 
   --secondary: 220 10% 18%;
@@ -68,7 +68,7 @@
 
   --border: 220 10% 18%;
   --input: 220 10% 18%;
-  --ring: 142 60% 50%;
+  --ring: 220 70% 55%;
 }
 
 @theme inline {

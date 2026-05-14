@@ -5,8 +5,8 @@ import { queryClient } from '@/lib/query-client';
 import { ThemeProvider, useTheme } from '@/app/theme-provider';
 
 function ThemedToaster() {
-  const { resolvedTheme } = useTheme();
-  return <Toaster theme={resolvedTheme} richColors closeButton position="top-center" />;
+  const { theme } = useTheme();
+  return <Toaster theme={theme} richColors closeButton position="top-center" />;
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
