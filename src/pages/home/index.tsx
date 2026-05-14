@@ -25,6 +25,12 @@ export function HomePage() {
           <span className="text-sm font-medium tracking-tight">newpda</span>
         </div>
         <div className="flex items-center gap-1">
+          <div className="hidden pr-2 text-right sm:block">
+            <p className="text-xs font-medium leading-tight">{profile?.display_name}</p>
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              {isAdmin ? 'Admin' : profile?.role === 'player' ? 'Jogador' : 'Espectador'}
+            </p>
+          </div>
           {canManageApprovals ? (
             <Button
               asChild
@@ -53,12 +59,6 @@ export function HomePage() {
               <Users className="size-4" />
             </Link>
           </Button>
-          <div className="hidden text-right sm:block">
-            <p className="text-xs font-medium leading-tight">{profile?.display_name}</p>
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              {isAdmin ? 'Admin' : profile?.role === 'player' ? 'Jogador' : 'Espectador'}
-            </p>
-          </div>
           <Button asChild variant="ghost" size="icon" aria-label="Meu cadastro">
             <Link to="/me">
               <User className="size-4" />
