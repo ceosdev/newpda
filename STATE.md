@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-14 (após entrega da gestão admin de posição/status e abas Ativos/Inativos na /team)
+**Última atualização:** 2026-05-14 (após entrega da Spec 001 — /matches MVP com infinite scroll, agrupamento por mês e CRUD admin)
 
 ---
 
@@ -41,6 +41,20 @@
   - shadcn novos: `switch`, `alert-dialog`.
   - **Limitação conhecida:** UI para gerenciar **espectadores** não existe. Spectator que vira player só com SQL direto. Entra como iteração futura.
 
+- **`/matches` — MVP de peladas (Spec 001)** (DB em `a547a51`, UI em `4677aef`)
+  - Migrations `20260514110000_matches` + `20260514110001_matches_rpcs`: enum `match_status('open','closed')`, tabela `matches` (`match_date`, `match_time` sem default no DB — o `20:00` fica só no front até a tela de configurações), índice composto para ordenação/paginação, RLS com select para qualquer aprovado. **Sem policies de escrita** — toda escrita passa por RPC `security definer`.
+  - RPCs admin: `create_match`, `update_match_schedule` (só data/hora, status bloqueado), `close_match` (erra com `22023` se já fechada — não há reabertura por design), `delete_match` (hard delete).
+  - Rota `/matches` dentro de `<RequireAuth />`; atalho `CalendarDays` no header da home apontando para lá.
+  - Listagem com **`useInfiniteQuery` + IntersectionObserver**, 10 por página. Após criar pelada, `removeQueries(matchKeys.list())` reseta o scroll para a página 0.
+  - Cards agrupados por mês com divider sutil (`maio/2026 ─────`) — grupo é construído por adjacência (não reordena), então funciona naturalmente com paginação incremental.
+  - **Card responsivo**: 1 coluna mobile, 2 colunas `lg` dentro de `max-w-5xl`.
+  - 3 botões de resposta (Eu vou verde / Não vou vermelho / Talvez azul, nessa ordem) aparecem **apenas para `role='player'` com `player_status` em `active`/`injured`** e em peladas `open`. Cliques disparam toast `"Respostas de presença ficam habilitadas na próxima entrega."` — Spec 002 vai dar persistência.
+  - Contadores Confirmados/Pendentes/Não vão renderizam zero como placeholder.
+  - Form de criar/editar é **responsivo**: `<Dialog>` no desktop (`>=sm`), `<Sheet bottom>` no mobile. Decidido via novo hook utilitário `useMediaQuery`.
+  - Confirmação de fechar (com texto sobre perda de respostas) e de excluir (disclaimer literal sobre apagar lançamentos), ambos via `AlertDialog`.
+  - Indicador de "carregando mais peladas" é um pill com borda + sombra + spinner em cor primary — discreto mas visível.
+  - **Limitação conhecida:** os 3 botões de resposta são placeholders sem persistência. Próxima spec resolve.
+
 - **Gestão admin de posição + status do jogador** (DB em `bc57ebc`, UI em `62ea15b`, polish do header em `8aac9d5`)
   - Migrations `20260514100000_admin_player_position_and_status` + patch `20260514100001_admin_position_default_null`: duas novas RPCs `security definer` que aceitam `profile_id` para simetria com o resto do painel admin — `admin_update_player_position(p_target_profile, p_position default null)` e `admin_update_player_status(p_target_profile, p_status, p_note default null)`. Posição não loga em `approval_history` (rotina de dados, espelha `set_player_monthly`); status continua logando `'player_status_changed'`.
   - `PlayerAdminActions` ganhou dois controles novos no sheet de detalhe: `Select` de posição (`Sem preferência / Goleiro / Defesa / Meio / Ataque`) e `RadioGroup` 3-col de status (`Ativo / DM / Inativo`). Ambos aplicam imediatamente com toast — **sem AlertDialog**, edições reversíveis e benignas (diferente de role/admin/revoke que continuam confirmando).
@@ -78,24 +92,31 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. UI admin — gerenciamento de espectadores (pequeno)
+### 1. Spec 002 — Presença em peladas (grande)
+- Modelar tabela `match_attendances` (PK composta `(match_id, profile_id)`, enum `attendance_response` em `going`/`maybe`/`declined`).
+- RPC `set_my_attendance` para `role='player'` com `player_status in ('active','injured')`. Demais usuários veem só leitura.
+- Plugar persistência nos 3 botões do card (hoje placeholders com toast "em breve").
+- Recalcular contadores no rodapé do card (Confirmados / Pendentes / Não vão). Universo de "pendentes" = jogadores `active`+`injured` ainda sem resposta.
+- Decidir efeito de mudança de role/status do jogador sobre a resposta já dada (decisão da Spec 001: "some" — confirmar quando implementar).
+
+### 2. UI admin — gerenciamento de espectadores (pequeno)
 - Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
 - Decidir: adicionar uma aba/tela de espectadores reusando o sheet, ou expor via /admin/approvals com um filtro extra? Atual workaround é SQL direto.
 
-### 2. Polish do fluxo de auth (médio)
+### 3. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
 - Reset de senha (link por email).
 - Tela "Confirme seu email" + religar Confirm email no painel.
 
-### 3. Domínio de partidas (grande, coração do app)
-- Modelagem (matches, attendances, teams), RLS, RPCs.
-- Telas: criar partida, lista, presença, sorteio.
-- Decidir heurística de sorteio depois (skill ainda não está no modelo; pode usar presença + mensalismo).
+### 4. Sorteio de times (médio/grande)
+- Depende de presença (Spec 002) estar implementada.
+- Modelar `match_teams` (snapshot do time sorteado para uma pelada).
+- Heurística do sorteio: decidir junto, com problema concreto. Skill ainda não está no modelo; pode usar presença + mensalismo + posição (goleiros distribuídos).
 
-### 4. Financeiro / mensalidade (grande, posterior)
+### 5. Financeiro / mensalidade (grande, posterior)
 - Marcar pago/atraso, histórico, eventualmente Pix/integração.
 
-### 5. PWA (fase final)
+### 6. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
 - Notificações push ficam para depois (Edge Function + Web Push).
 
