@@ -68,6 +68,52 @@ export type Database = {
           },
         ]
       }
+      match_attendances: {
+        Row: {
+          match_id: string
+          profile_id: string
+          responded_at: string
+          response: Database["public"]["Enums"]["attendance_response"]
+          updated_at: string
+        }
+        Insert: {
+          match_id: string
+          profile_id: string
+          responded_at?: string
+          response: Database["public"]["Enums"]["attendance_response"]
+          updated_at?: string
+        }
+        Update: {
+          match_id?: string
+          profile_id?: string
+          responded_at?: string
+          response?: Database["public"]["Enums"]["attendance_response"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_attendances_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_attendances_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_attendances_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           created_at: string
@@ -226,7 +272,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      matches_with_counts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          declined_count: number | null
+          going_count: number | null
+          id: string | null
+          match_date: string | null
+          match_time: string | null
+          maybe_count: number | null
+          status: Database["public"]["Enums"]["match_status"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_update_player_position: {
@@ -419,6 +487,18 @@ export type Database = {
           profile_id: string
         }[]
       }
+      list_match_attendances: {
+        Args: { p_match_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          nickname: string
+          preferred_position: string
+          profile_id: string
+          responded_at: string
+          response: Database["public"]["Enums"]["attendance_response"]
+        }[]
+      }
       list_players_public: {
         Args: never
         Returns: {
@@ -479,6 +559,25 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_my_attendance: {
+        Args: {
+          p_match_id: string
+          p_response: Database["public"]["Enums"]["attendance_response"]
+        }
+        Returns: {
+          match_id: string
+          profile_id: string
+          responded_at: string
+          response: Database["public"]["Enums"]["attendance_response"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "match_attendances"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -622,6 +721,7 @@ export type Database = {
         | "admin_granted"
         | "admin_revoked"
         | "player_status_changed"
+      attendance_response: "going" | "maybe" | "declined"
       match_status: "open" | "closed"
       player_status: "active" | "inactive" | "injured"
       profile_role: "player" | "spectator"
@@ -762,6 +862,7 @@ export const Constants = {
         "admin_revoked",
         "player_status_changed",
       ],
+      attendance_response: ["going", "maybe", "declined"],
       match_status: ["open", "closed"],
       player_status: ["active", "inactive", "injured"],
       profile_role: ["player", "spectator"],
