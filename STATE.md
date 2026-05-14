@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-13 (após entrega de /team com lista de jogadores + sheet de detalhe)
+**Última atualização:** 2026-05-14 (após entrega da gestão admin de posição/status e abas Ativos/Inativos na /team)
 
 ---
 
@@ -41,6 +41,13 @@
   - shadcn novos: `switch`, `alert-dialog`.
   - **Limitação conhecida:** UI para gerenciar **espectadores** não existe. Spectator que vira player só com SQL direto. Entra como iteração futura.
 
+- **Gestão admin de posição + status do jogador** (DB em `bc57ebc`, UI em `62ea15b`, polish do header em `8aac9d5`)
+  - Migrations `20260514100000_admin_player_position_and_status` + patch `20260514100001_admin_position_default_null`: duas novas RPCs `security definer` que aceitam `profile_id` para simetria com o resto do painel admin — `admin_update_player_position(p_target_profile, p_position default null)` e `admin_update_player_status(p_target_profile, p_status, p_note default null)`. Posição não loga em `approval_history` (rotina de dados, espelha `set_player_monthly`); status continua logando `'player_status_changed'`.
+  - `PlayerAdminActions` ganhou dois controles novos no sheet de detalhe: `Select` de posição (`Sem preferência / Goleiro / Defesa / Meio / Ataque`) e `RadioGroup` 3-col de status (`Ativo / DM / Inativo`). Ambos aplicam imediatamente com toast — **sem AlertDialog**, edições reversíveis e benignas (diferente de role/admin/revoke que continuam confirmando).
+  - Tela `/team` quebrada em **abas Ativos × Inativos** com contagens nas labels. Filtros de busca **independentes por aba** (`queryActive` / `queryInactive` separados). Na aba Ativos: split em **Goleiros** (preferred_position === 'goalkeeper') antes de **Linha**, cada seção com heading sutil + grid.
+  - Badge de status `injured` (DM) usa `bg-destructive/10 text-destructive` (vermelho via token), não mais âmbar.
+  - Header da home (desktop ≥ `sm`): nome + role do usuário agora **antes** dos ícones de ação (ShieldCheck → Time → Meu cadastro → Sair). Mobile inalterado (bloco continua `hidden`).
+
 - **Edição self do profile/player** (DB em `42bb656`, UI em `05684ba`)
   - Migrations: `profiles.phone text` (nullable), `profiles.birth_date date` (nullable). RPC `update_my_profile` cresceu para `(text, text, text, date)`; RPC `update_my_player` ganhou `default null` em todos os args.
   - Rota `/me` protegida por `RequireAuth`, atalho no header da home (ícone User) visível para todo aprovado.
@@ -71,9 +78,9 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. UI admin — gerenciamento de role + admin (médio)
-- Tela de jogadores aprovados com ações: trocar role, promover/rebaixar admin (chamando `change_user_role` e `set_user_admin`).
-- Atenção: prevenir admin último degradação de si mesmo (regra de negócio que pode estar no RPC; verificar antes).
+### 1. UI admin — gerenciamento de espectadores (pequeno)
+- Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
+- Decidir: adicionar uma aba/tela de espectadores reusando o sheet, ou expor via /admin/approvals com um filtro extra? Atual workaround é SQL direto.
 
 ### 2. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
