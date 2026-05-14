@@ -224,6 +224,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         Insert: {
@@ -241,6 +242,7 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["profile_role"] | null
           status?: Database["public"]["Enums"]["profile_status"]
+          theme_preference?: Database["public"]["Enums"]["theme_preference"]
           updated_at?: string
         }
         Update: {
@@ -258,6 +260,7 @@ export type Database = {
           phone?: string | null
           role?: Database["public"]["Enums"]["profile_role"] | null
           status?: Database["public"]["Enums"]["profile_status"]
+          theme_preference?: Database["public"]["Enums"]["theme_preference"]
           updated_at?: string
         }
         Relationships: [
@@ -369,6 +372,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -398,6 +402,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -461,6 +466,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -528,6 +534,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -554,6 +561,7 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -674,6 +682,34 @@ export type Database = {
           phone: string | null
           role: Database["public"]["Enums"]["profile_role"] | null
           status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_my_theme_preference: {
+        Args: { p_value: Database["public"]["Enums"]["theme_preference"] }
+        Returns: {
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          birth_date: string | null
+          created_at: string
+          denied_reason: string | null
+          display_name: string
+          email: string
+          id: string
+          is_admin: boolean
+          onboarded_at: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["profile_role"] | null
+          status: Database["public"]["Enums"]["profile_status"]
+          theme_preference: Database["public"]["Enums"]["theme_preference"]
           updated_at: string
         }
         SetofOptions: {
@@ -726,6 +762,7 @@ export type Database = {
       player_status: "active" | "inactive" | "injured"
       profile_role: "player" | "spectator"
       profile_status: "pending" | "approved" | "denied"
+      theme_preference: "light" | "dark"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -867,6 +904,7 @@ export const Constants = {
       player_status: ["active", "inactive", "injured"],
       profile_role: ["player", "spectator"],
       profile_status: ["pending", "approved", "denied"],
+      theme_preference: ["light", "dark"],
     },
   },
 } as const
