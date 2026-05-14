@@ -1,6 +1,34 @@
 import type { Database } from '@/lib/supabase/database.types';
 
 export type MatchStatus = Database['public']['Enums']['match_status'];
+export type AttendanceResponse = Database['public']['Enums']['attendance_response'];
+
+export const ATTENDANCE_LABELS: Record<AttendanceResponse, string> = {
+  going: 'Eu vou',
+  declined: 'Eu não vou',
+  maybe: 'Talvez',
+};
+
+export const ATTENDANCE_TAB_LABELS: Record<AttendanceResponse, string> = {
+  going: 'Confirmados',
+  declined: 'Não vão',
+  maybe: 'Talvez',
+};
+
+export const ATTENDANCE_EMPTY_LABELS: Record<AttendanceResponse, string> = {
+  going: 'Ninguém confirmou ainda',
+  declined: 'Ninguém disse que não vai',
+  maybe: 'Ninguém disse que talvez',
+};
+
+// Display order across UI surfaces (card buttons, tabs): Confirmados | Não vão | Talvez.
+export const ATTENDANCE_ORDER: AttendanceResponse[] = ['going', 'declined', 'maybe'];
+
+export const ATTENDANCE_CHIP_CLASS: Record<AttendanceResponse, string> = {
+  going: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  declined: 'bg-destructive/10 text-destructive',
+  maybe: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+};
 
 export const MATCH_STATUS_LABELS: Record<MatchStatus, string> = {
   open: 'Aberta',

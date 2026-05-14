@@ -1,5 +1,4 @@
-import { CalendarDays, Clock, Pencil, Trash2, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { CalendarDays, Clock, Lock, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -7,20 +6,24 @@ import {
   MATCH_STATUS_LABELS,
   formatMatchDate,
   formatMatchTime,
+  type AttendanceResponse,
 } from '@/features/matches/lib/labels';
-import type { Match } from '@/features/matches/api/use-matches-infinite';
+import type { MatchWithCounts } from '@/features/matches/api/use-matches-infinite';
+import { AttendanceControls } from '@/features/matches/components/attendance-controls';
 import { cn } from '@/lib/utils';
 
 type MatchCardProps = {
-  match: Match;
+  match: MatchWithCounts;
   canManage: boolean;
   canRespond: boolean;
-  onEdit: (match: Match) => void;
+  myResponse: AttendanceResponse | null;
+  onNavigate: (matchId: string) => void;
+  onEdit: (match: MatchWithCounts) => void;
   onClose: (matchId: string) => void;
   onDelete: (matchId: string) => void;
 };
 
-function StatCell({ label, value }: { label: string; value: string }) {
+function StatCell({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <span className="text-base font-semibold tabular-nums">{value}</span>
@@ -29,28 +32,36 @@ function StatCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-const ATTENDANCE_PLACEHOLDER_TOAST =
-  'Respostas de presença ficam habilitadas na próxima entrega.';
-
 export function MatchCard({
   match,
   canManage,
   canRespond,
+  myResponse,
+  onNavigate,
   onEdit,
   onClose,
   onDelete,
 }: MatchCardProps) {
   const isOpen = match.status === 'open';
-
   const showResponse = canRespond && isOpen;
   const showCloseAction = canManage && isOpen;
 
-  const handlePlaceholder = () => {
-    toast.info(ATTENDANCE_PLACEHOLDER_TOAST, { duration: 2200 });
-  };
+  const handleNavigate = () => onNavigate(match.id);
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   return (
-    <Card className="overflow-hidden">
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={handleNavigate}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleNavigate();
+        }
+      }}
+      className="cursor-pointer overflow-hidden transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
       <div className="flex items-center justify-between gap-3 px-4 pt-4">
         <div className="flex items-center gap-3 text-sm">
           <span className="inline-flex items-center gap-1 font-semibold tabular-nums">
@@ -73,35 +84,23 @@ export function MatchCard({
       </div>
 
       {showResponse ? (
-        <div className="grid grid-cols-3 gap-2 px-4 pt-4">
-          <Button
-            type="button"
-            onClick={handlePlaceholder}
-            className="bg-emerald-600 text-white hover:bg-emerald-700"
-          >
-            Eu vou
-          </Button>
-          <Button type="button" variant="destructive" onClick={handlePlaceholder}>
-            Não vou
-          </Button>
-          <Button
-            type="button"
-            onClick={handlePlaceholder}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
-            Talvez
-          </Button>
+        <div className="px-4 pt-3">
+          <AttendanceControls matchId={match.id} currentResponse={myResponse} />
         </div>
       ) : null}
 
       <div className="grid grid-cols-3 gap-2 px-4 pb-4 pt-4">
-        <StatCell label="Confirmados" value="0" />
-        <StatCell label="Pendentes" value="0" />
-        <StatCell label="Não vão" value="0" />
+        <StatCell label="Confirmados" value={match.going_count} />
+        <StatCell label="Não vão" value={match.declined_count} />
+        <StatCell label="Talvez" value={match.maybe_count} />
       </div>
 
       {canManage ? (
-        <div className="flex items-center gap-2 border-t bg-muted/30 px-3 py-2">
+        <div
+          className="flex items-center gap-2 border-t bg-muted/30 px-3 py-2"
+          onClick={stop}
+          onKeyDown={stop}
+        >
           <Button
             type="button"
             variant="ghost"
@@ -120,7 +119,7 @@ export function MatchCard({
               className="flex-1"
               onClick={() => onClose(match.id)}
             >
-              <XCircle aria-hidden className="size-4" />
+              <Lock aria-hidden className="size-4" />
               Fechar
             </Button>
           ) : null}

@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CalendarPlus, Loader2, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmptyState } from '@/components/shared/empty-state';
 import {
   useMatchesInfinite,
-  type Match,
+  type MatchWithCounts,
 } from '@/features/matches/api/use-matches-infinite';
+import { useMyAttendances } from '@/features/matches/api/use-my-attendances';
 import { MatchCard } from '@/features/matches/components/match-card';
 import { MatchForm } from '@/features/matches/components/match-form';
 import { CloseMatchDialog } from '@/features/matches/components/close-match-dialog';
@@ -20,16 +21,18 @@ import { mapSupabaseError } from '@/lib/supabase/errors';
 
 type EditingState =
   | { mode: 'create' }
-  | { mode: 'edit'; match: Match }
+  | { mode: 'edit'; match: MatchWithCounts }
   | null;
 
 export function MatchesPage() {
+  const navigate = useNavigate();
   const { can, profile } = usePermissions();
   const canManage = can('manage_matches');
   const { data: currentPlayer } = useCurrentPlayer();
   const canRespond =
     profile?.role === 'player' &&
     (currentPlayer?.player_status === 'active' || currentPlayer?.player_status === 'injured');
+  const { data: myAttendances } = useMyAttendances();
 
   const {
     data,
@@ -47,13 +50,13 @@ export function MatchesPage() {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const matches = useMemo<Match[]>(
+  const matches = useMemo<MatchWithCounts[]>(
     () => data?.pages.flatMap((page) => page) ?? [],
     [data],
   );
 
   const groupedByMonth = useMemo(() => {
-    const groups: { key: string; label: string; items: Match[] }[] = [];
+    const groups: { key: string; label: string; items: MatchWithCounts[] }[] = [];
     for (const match of matches) {
       const key = monthKey(match.match_date);
       const tail = groups[groups.length - 1];
@@ -174,6 +177,8 @@ export function MatchesPage() {
                           match={match}
                           canManage={canManage}
                           canRespond={canRespond}
+                          myResponse={myAttendances?.[match.id] ?? null}
+                          onNavigate={(id) => navigate(`/matches/${id}`)}
                           onEdit={(m) => setEditing({ mode: 'edit', match: m })}
                           onClose={setClosingId}
                           onDelete={setDeletingId}
