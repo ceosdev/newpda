@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-14 (após entrega da Spec 001 — /matches MVP com infinite scroll, agrupamento por mês e CRUD admin)
+**Última atualização:** 2026-05-14 (após entrega da Spec 002 — presença persistida com optimistic UI e tela de detalhes)
 
 ---
 
@@ -40,6 +40,18 @@
   - Admin mutations agora invalidam `teamKeys.all` além das chaves de admin.
   - shadcn novos: `switch`, `alert-dialog`.
   - **Limitação conhecida:** UI para gerenciar **espectadores** não existe. Spectator que vira player só com SQL direto. Entra como iteração futura.
+
+- **Presença em peladas (Spec 002)** (DB em `1b5a511`, UI em `b20303a`)
+  - 3 migrations: enum `attendance_response('going','maybe','declined')`, tabela `match_attendances` com PK composta `(match_id, profile_id)` + FK cascade para `matches`; trigger em `players` que **apaga as respostas** quando o jogador sai do roster ativo (`active`/`injured` → `inactive` ou `archived_at` setado); view `matches_with_counts` (matches + 3 colunas agregadas via lateral) e RPCs `set_my_attendance` (upsert validando player + status + `match.status='open'`) e `list_match_attendances` (joined com avatar/apelido/posição).
+  - **Transição `active` ⇄ `injured` (DM) mantém as respostas.** Só a saída do roster apaga.
+  - Listagem `/matches` agora **lê da view `matches_with_counts`** (contadores reais no card) e paginação caiu para **5 por lote** (era 10).
+  - Card inteiro é navegável (`role="button"` + Enter/Space) para `/matches/:id`. Os botões de resposta usam `stopPropagation` para não disparar a navegação.
+  - Componente reusável `AttendanceControls`: chip "Sua resposta: Eu vou/Talvez/Eu não vou" colorido + 3 botões em ordem `Eu vou | Não vou | Talvez`; botão da resposta atual fica sólido, os outros em outline da mesma família. Contadores no rodapé seguem a mesma ordem dos botões.
+  - **Optimistic update completo** no `useSetAttendance`: `onMutate` ajusta contadores na lista (todas as páginas do infinite cache), no detail e no map `myAttendances`; `onError` reverte via snapshot; `onSettled` invalida tudo para refetch da ground truth.
+  - Tela `/matches/:id` (`MatchDetailPage`): header com data/hora/status, bloco `AttendanceControls` para quem pode responder em pelada aberta, e 3 abas (`Confirmados · N` / `Talvez · N` / `Não vão · N`) com cards enxutos de jogador (foto + apelido + posição) ordenados por `responded_at asc`. Marca `· Você` no card do próprio jogador.
+  - **Pelada fechada na tela de detalhes:** abas e listas seguem visíveis (histórico + ancoragem para futuros scouts); só a área de presença some.
+  - **Espectador / player `inactive`:** veem a lista e os cards, **não** veem `AttendanceControls`.
+  - Ícone do botão "Fechar pelada" virou `Lock` (cadeado), substituindo o `XCircle`.
 
 - **`/matches` — MVP de peladas (Spec 001)** (DB em `a547a51`, UI em `4677aef`)
   - Migrations `20260514110000_matches` + `20260514110001_matches_rpcs`: enum `match_status('open','closed')`, tabela `matches` (`match_date`, `match_time` sem default no DB — o `20:00` fica só no front até a tela de configurações), índice composto para ordenação/paginação, RLS com select para qualquer aprovado. **Sem policies de escrita** — toda escrita passa por RPC `security definer`.
@@ -92,12 +104,10 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. Spec 002 — Presença em peladas (grande)
-- Modelar tabela `match_attendances` (PK composta `(match_id, profile_id)`, enum `attendance_response` em `going`/`maybe`/`declined`).
-- RPC `set_my_attendance` para `role='player'` com `player_status in ('active','injured')`. Demais usuários veem só leitura.
-- Plugar persistência nos 3 botões do card (hoje placeholders com toast "em breve").
-- Recalcular contadores no rodapé do card (Confirmados / Pendentes / Não vão). Universo de "pendentes" = jogadores `active`+`injured` ainda sem resposta.
-- Decidir efeito de mudança de role/status do jogador sobre a resposta já dada (decisão da Spec 001: "some" — confirmar quando implementar).
+### 1. Spec 003 — Scouts/lançamentos da pelada (grande)
+- Próxima evolução natural da tela `/matches/:id` — eventos durante/após a pelada (gols, cartões, assistências?). Ainda em decisão.
+- Vai precisar de tabela `match_events` (ou `match_scouts`), RLS por admin para escrever, leitura para qualquer aprovado.
+- Tela de detalhes já está preparada como "casa" desses lançamentos.
 
 ### 2. UI admin — gerenciamento de espectadores (pequeno)
 - Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
