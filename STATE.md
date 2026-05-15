@@ -2,13 +2,22 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-14 (após rebrand para "Pelada dos Amigos" e persistência de tema no profile)
+**Última atualização:** 2026-05-15 (após Spec 003 — lançamento de presenças)
 
 ---
 
 ## Status atual
 
 ### O que já está em produção (no repo + Supabase remoto)
+
+- **Lançamento de presenças (Spec 003)** (DB em `c31f014`, UI em `204506a`)
+  - 3 migrations: tabela `match_check_ins` (PK `(match_id, player_id)`, FK cascade p/ `matches`, restrict p/ `players`/`profiles`; RLS `select` p/ aprovados, **sem policy de escrita**); 4 RPCs `security definer` — `record_match_check_ins` (admin, lote, `ON CONFLICT DO NOTHING`, ignora inelegíveis), `remove_match_check_in` (admin, idempotente), `list_match_check_in_candidates` (admin), `list_match_check_ins` (aprovado); `list_players_public` recriada (drop+create) com `check_in_count` + `total_match_count`.
+  - **Presença ≠ resposta.** `match_check_ins` é o fato consumado ("esteve lá"), independente de `match_attendances` (RSVP/intenção). **Sem trigger de limpeza** — presença é histórico e sobrevive a `inactive`/arquivamento posterior do jogador (oposto do trigger da Spec 002).
+  - **Tela `/matches/:id` reorganizada** em seções nomeadas: **Respostas** (abas RSVP da Spec 002, agora só leitura) e **Presenças**. Os botões de resposta e o chip "Sua resposta" **saíram da tela de detalhes** — RSVP agora se responde só pelo card de `/matches` (isto substitui o critério da Spec 002 que pedia a área de resposta no detalhe).
+  - Seção **Presenças** (admin): botão "Lançar presença" abre modal responsivo (`Dialog` desktop / `Sheet` mobile) com jogadores `active`/`injured` ainda não lançados, busca em memória + multi-seleção (linha clicável + indicador de check); cada jogador lançado tem um `X` para desfazer.
+  - `PlayerMiniCard`: card enxuto reutilizável (foto | nome/posição | slot `trailing`) compartilhado pelas duas seções e pelo modal — substitui `attendance-player-card` (removido). **Atenção:** o `Card` do shadcn é `flex-col` por padrão; cards em linha precisam de `flex-row` explícito. `SectionHeading` extraído p/ `components/shared/` e reusado em `/team`.
+  - `/team`: detalhe do jogador abre como `Dialog` centralizado no desktop e `Sheet` no mobile; o card do jogador mostra **frequência real** (`check-ins ÷ total de peladas criadas`, arredondado; `—` se não há peladas). "Gols"/"Cartões" seguem placeholders até a spec de scouts.
+  - **Limitações conhecidas:** lançamento retroativo de quem já saiu do elenco não é possível (o candidato precisa estar `active`/`injured` no momento do lançamento) — decisão aceita, raro na prática. Sem teste unitário do hook de mutation: o repo não tem infraestrutura de testes (Vitest/RTL não configurados); bootstrapá-la ficou fora do escopo.
 
 - **Identity layer no Supabase** (commit `c01c742`)
   - 11 migrations aplicadas: schemas, enums (`profile_status`, `profile_role`, `approval_action`), tabelas (`profiles`, `players`, `approval_history`), helpers `security definer` (`is_admin()`, `is_approved_player()`), RLS policies por operação, triggers de signup, RPCs self (`update_my_profile`, `update_my_player`) e admin (`approve_user`, `deny_user`, `change_user_role`, `set_user_admin`), bucket `avatars` com policies próprias.
@@ -112,10 +121,10 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. Spec 003 — Scouts/lançamentos da pelada (grande)
+### 1. Spec 004 — Scouts/lançamentos do dia (grande)
 - Próxima evolução natural da tela `/matches/:id` — eventos durante/após a pelada (gols, cartões, assistências?). Ainda em decisão.
 - Vai precisar de tabela `match_events` (ou `match_scouts`), RLS por admin para escrever, leitura para qualquer aprovado.
-- Tela de detalhes já está preparada como "casa" desses lançamentos.
+- A tela de detalhes já tem o ganho de seções nomeadas — entra como **Seção 3**, depois de Respostas e Presenças. Os placeholders "Gols"/"Cartões" do card de `/team` passam a refletir dados reais.
 
 ### 2. UI admin — gerenciamento de espectadores (pequeno)
 - Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
