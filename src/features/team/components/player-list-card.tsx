@@ -25,15 +25,24 @@ const STATUS_BADGE_CLASS: Record<string, string> = {
 
 type StatSlot = { label: string; value: string };
 
-const PLACEHOLDER_STATS: StatSlot[] = [
-  { label: 'Gols', value: '—' },
-  { label: 'Cartões', value: '—' },
-  { label: 'Frequência', value: '—' },
-];
+function frequencyLabel(checkIns: number, totalMatches: number): string {
+  if (totalMatches <= 0) return '—';
+  return `${Math.round((checkIns / totalMatches) * 100)}%`;
+}
 
 export function PlayerListCard({ player, onSelect }: PlayerListCardProps) {
   const primaryName = player.nickname?.trim() || player.display_name;
   const statusKey = player.player_status ?? 'active';
+
+  // Gols/Cartões stay as placeholders until the scouts spec; Frequência is live.
+  const stats: StatSlot[] = [
+    { label: 'Gols', value: '—' },
+    { label: 'Cartões', value: '—' },
+    {
+      label: 'Frequência',
+      value: frequencyLabel(player.check_in_count, player.total_match_count),
+    },
+  ];
 
   return (
     <Card
@@ -91,7 +100,7 @@ export function PlayerListCard({ player, onSelect }: PlayerListCardProps) {
 
       <div className="border-t bg-muted/30 px-3 py-2">
         <div className="grid grid-cols-3 gap-2 text-center">
-          {PLACEHOLDER_STATS.map((stat) => (
+          {stats.map((stat) => (
             <div key={stat.label} className="flex flex-col gap-0.5">
               <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                 {stat.label}

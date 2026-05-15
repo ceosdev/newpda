@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/empty-state';
+import { SectionHeading } from '@/components/shared/section-heading';
 import { useTeamPlayers, type PlayerListItem } from '@/features/team/api/use-team-players';
 import { PlayerListCard } from '@/features/team/components/player-list-card';
 import { PlayerDetailSheet } from '@/features/team/components/player-detail-sheet';
@@ -79,18 +80,6 @@ function PlayersGrid({
       {players.map((player) => (
         <PlayerListCard key={player.profile_id} player={player} onSelect={onSelect} />
       ))}
-    </div>
-  );
-}
-
-function SectionHeading({ icon: Icon, label, count }: { icon: typeof Shield; label: string; count: number }) {
-  return (
-    <div className="flex items-center gap-2 pt-1">
-      <Icon aria-hidden className="size-3.5 text-muted-foreground" />
-      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </h2>
-      <span className="text-[11px] tabular-nums text-muted-foreground/70">{count}</span>
     </div>
   );
 }

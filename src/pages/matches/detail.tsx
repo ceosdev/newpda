@@ -1,19 +1,19 @@
-import { useMemo } from 'react';
-import { ArrowLeft, CalendarDays, Clock, Users } from 'lucide-react';
+import { useMemo, type ReactNode } from 'react';
+import { ArrowLeft, CalendarDays, Clock, ListChecks, Users } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/empty-state';
+import { SectionHeading } from '@/components/shared/section-heading';
 import { useMatchDetail } from '@/features/matches/api/use-match-detail';
 import {
   useMatchAttendances,
   type MatchAttendance,
 } from '@/features/matches/api/use-match-attendances';
-import { useMyAttendances } from '@/features/matches/api/use-my-attendances';
-import { AttendanceControls } from '@/features/matches/components/attendance-controls';
-import { AttendancePlayerCard } from '@/features/matches/components/attendance-player-card';
+import { PlayerMiniCard } from '@/features/matches/components/player-mini-card';
+import { MatchPresencesSection } from '@/features/matches/components/match-presences-section';
 import {
   ATTENDANCE_EMPTY_LABELS,
   ATTENDANCE_ORDER,
@@ -23,22 +23,30 @@ import {
   formatMatchDate,
   formatMatchTime,
 } from '@/features/matches/lib/labels';
+import { positionLabel } from '@/features/team/lib/labels';
 import { usePermissions } from '@/features/auth/hooks/use-permissions';
-import { useCurrentPlayer } from '@/features/me/api/use-current-player';
 import { useSession } from '@/features/auth/api/use-session';
 import { mapSupabaseError } from '@/lib/supabase/errors';
 import { cn } from '@/lib/utils';
 
+function DetailHeader({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <header className="flex items-center gap-3 border-b px-4 py-3">
+      <Button asChild variant="ghost" size="icon" aria-label="Voltar">
+        <Link to="/matches">
+          <ArrowLeft className="size-4" />
+        </Link>
+      </Button>
+      {children ?? <h1 className="text-sm font-semibold tracking-tight">{title}</h1>}
+    </header>
+  );
+}
+
 export function MatchDetailPage() {
   const { id: matchId } = useParams<{ id: string }>();
-  const { profile } = usePermissions();
+  const { can } = usePermissions();
   const { data: session } = useSession();
-  const { data: currentPlayer } = useCurrentPlayer();
-  const { data: myAttendances } = useMyAttendances();
-
-  const canRespond =
-    profile?.role === 'player' &&
-    (currentPlayer?.player_status === 'active' || currentPlayer?.player_status === 'injured');
+  const canManage = can('manage_matches');
 
   const {
     data: match,
@@ -55,8 +63,6 @@ export function MatchDetailPage() {
   } = useMatchAttendances(matchId);
 
   const myUserId = session?.user.id ?? null;
-  const myResponse = matchId ? (myAttendances?.[matchId] ?? null) : null;
-  const isOpen = match?.status === 'open';
 
   const grouped = useMemo(() => {
     const buckets: Record<string, MatchAttendance[]> = { going: [], maybe: [], declined: [] };
@@ -69,14 +75,7 @@ export function MatchDetailPage() {
   if (matchLoading) {
     return (
       <div className="flex min-h-dvh flex-col">
-        <header className="flex items-center gap-3 border-b px-4 py-3">
-          <Button asChild variant="ghost" size="icon" aria-label="Voltar">
-            <Link to="/matches">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <h1 className="text-sm font-semibold tracking-tight">Pelada</h1>
-        </header>
+        <DetailHeader title="Pelada" />
         <main className="flex-1 px-4 py-4">
           <Skeleton className="h-32 w-full" />
         </main>
@@ -87,14 +86,7 @@ export function MatchDetailPage() {
   if (matchError || !match) {
     return (
       <div className="flex min-h-dvh flex-col">
-        <header className="flex items-center gap-3 border-b px-4 py-3">
-          <Button asChild variant="ghost" size="icon" aria-label="Voltar">
-            <Link to="/matches">
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Button>
-          <h1 className="text-sm font-semibold tracking-tight">Pelada</h1>
-        </header>
+        <DetailHeader title="Pelada" />
         <main className="flex-1 px-4 py-4">
           <Alert variant="destructive">
             <AlertDescription>
@@ -108,12 +100,7 @@ export function MatchDetailPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center gap-3 border-b px-4 py-3">
-        <Button asChild variant="ghost" size="icon" aria-label="Voltar">
-          <Link to="/matches">
-            <ArrowLeft className="size-4" />
-          </Link>
-        </Button>
+      <DetailHeader title="Pelada">
         <div className="flex flex-1 items-center gap-3">
           <span className="inline-flex items-center gap-1 text-sm font-semibold tabular-nums">
             <CalendarDays aria-hidden className="size-4 text-muted-foreground" />
@@ -132,65 +119,72 @@ export function MatchDetailPage() {
         >
           {MATCH_STATUS_LABELS[match.status]}
         </span>
-      </header>
+      </DetailHeader>
 
       <main className="flex-1 px-4 py-4">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-          {canRespond && isOpen ? (
-            <AttendanceControls matchId={match.id} currentResponse={myResponse} />
-          ) : null}
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+          <section className="flex flex-col gap-3">
+            <SectionHeading icon={ListChecks} label="Respostas" />
 
-          <Tabs defaultValue="going" className="gap-3">
-            <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="going" className="gap-3">
+              <TabsList className="grid w-full grid-cols-3">
+                {ATTENDANCE_ORDER.map((response) => {
+                  const count =
+                    response === 'going'
+                      ? match.going_count
+                      : response === 'maybe'
+                        ? match.maybe_count
+                        : match.declined_count;
+                  return (
+                    <TabsTrigger key={response} value={response}>
+                      {ATTENDANCE_TAB_LABELS[response]}
+                      <span className="ml-1 text-[10px] tabular-nums text-muted-foreground/80">
+                        {count}
+                      </span>
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+
               {ATTENDANCE_ORDER.map((response) => {
-                const count =
-                  response === 'going'
-                    ? match.going_count
-                    : response === 'maybe'
-                      ? match.maybe_count
-                      : match.declined_count;
+                const list = grouped[response] ?? [];
                 return (
-                  <TabsTrigger key={response} value={response}>
-                    {ATTENDANCE_TAB_LABELS[response]}
-                    <span className="ml-1 text-[10px] tabular-nums text-muted-foreground/80">
-                      {count}
-                    </span>
-                  </TabsTrigger>
+                  <TabsContent key={response} value={response} className="flex flex-col gap-2">
+                    {attendancesLoading ? (
+                      <>
+                        <Skeleton className="h-[60px] w-full" />
+                        <Skeleton className="h-[60px] w-full" />
+                      </>
+                    ) : attendancesError ? (
+                      <Alert variant="destructive">
+                        <AlertDescription>
+                          {mapSupabaseError(attendancesErrObj)}
+                        </AlertDescription>
+                      </Alert>
+                    ) : list.length === 0 ? (
+                      <EmptyState icon={Users} title={ATTENDANCE_EMPTY_LABELS[response]} />
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {list.map((entry) => (
+                          <PlayerMiniCard
+                            key={entry.profile_id}
+                            avatarUrl={entry.avatar_url}
+                            primaryName={entry.nickname?.trim() || entry.display_name}
+                            secondary={positionLabel(entry.preferred_position)}
+                            isSelf={entry.profile_id === myUserId}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
                 );
               })}
-            </TabsList>
+            </Tabs>
+          </section>
 
-            {ATTENDANCE_ORDER.map((response) => {
-              const list = grouped[response] ?? [];
-              return (
-                <TabsContent key={response} value={response} className="flex flex-col gap-2">
-                  {attendancesLoading ? (
-                    <>
-                      <Skeleton className="h-16 w-full" />
-                      <Skeleton className="h-16 w-full" />
-                    </>
-                  ) : attendancesError ? (
-                    <Alert variant="destructive">
-                      <AlertDescription>{mapSupabaseError(attendancesErrObj)}</AlertDescription>
-                    </Alert>
-                  ) : list.length === 0 ? (
-                    <EmptyState icon={Users} title={ATTENDANCE_EMPTY_LABELS[response]} />
-                  ) : (
-                    list.map((entry) => (
-                      <AttendancePlayerCard
-                        key={entry.profile_id}
-                        entry={entry}
-                        isSelf={entry.profile_id === myUserId}
-                      />
-                    ))
-                  )}
-                </TabsContent>
-              );
-            })}
-          </Tabs>
+          <MatchPresencesSection matchId={match.id} canManage={canManage} />
         </div>
       </main>
     </div>
   );
 }
-
