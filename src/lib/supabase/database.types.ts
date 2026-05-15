@@ -114,6 +114,56 @@ export type Database = {
           },
         ]
       }
+      match_check_ins: {
+        Row: {
+          checked_in_at: string
+          checked_in_by: string
+          match_id: string
+          player_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          checked_in_by: string
+          match_id: string
+          player_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          checked_in_by?: string
+          match_id?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_check_ins_checked_in_by_fkey"
+            columns: ["checked_in_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_check_ins_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_check_ins_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches_with_counts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_check_ins_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           created_at: string
@@ -505,17 +555,50 @@ export type Database = {
           response: Database["public"]["Enums"]["attendance_response"]
         }[]
       }
+      list_match_check_in_candidates: {
+        Args: { p_match_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          nickname: string
+          player_id: string
+          preferred_position: string
+          profile_id: string
+        }[]
+      }
+      list_match_check_ins: {
+        Args: { p_match_id: string }
+        Returns: {
+          avatar_url: string
+          checked_in_at: string
+          display_name: string
+          nickname: string
+          player_id: string
+          preferred_position: string
+          profile_id: string
+        }[]
+      }
       list_players_public: {
         Args: never
         Returns: {
           avatar_url: string
+          check_in_count: number
           display_name: string
           is_admin: boolean
           nickname: string
           player_status: Database["public"]["Enums"]["player_status"]
           preferred_position: string
           profile_id: string
+          total_match_count: number
         }[]
+      }
+      record_match_check_ins: {
+        Args: { p_match_id: string; p_player_ids: string[] }
+        Returns: number
+      }
+      remove_match_check_in: {
+        Args: { p_match_id: string; p_player_id: string }
+        Returns: undefined
       }
       revoke_approval: {
         Args: { p_target: string }
