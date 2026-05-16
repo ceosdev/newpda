@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Plus, UserCheck, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2, Plus, UserCheck, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,6 +21,10 @@ type MatchPresencesSectionProps = {
   /** whether the viewer can launch/remove presences (admin) */
   canManage: boolean;
 };
+
+// Presence is low-signal for most peladeiros — show a short preview, the rest
+// stays one tap away.
+const PRESENCE_PREVIEW = 10;
 
 function PresenceCard({
   entry,
@@ -64,11 +68,14 @@ function PresenceCard({
 export function MatchPresencesSection({ matchId, canManage }: MatchPresencesSectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const { data, isLoading, isError, error, refetch, isRefetching } = useMatchCheckIns(matchId);
   const remove = useRemoveMatchCheckIn();
 
   const checkIns = data ?? [];
   const count = isLoading || isError ? undefined : checkIns.length;
+  const visible = expanded ? checkIns : checkIns.slice(0, PRESENCE_PREVIEW);
+  const hiddenCount = checkIns.length - visible.length;
 
   const handleRemove = (playerId: string, name: string) => {
     setRemovingId(playerId);
@@ -121,17 +128,38 @@ export function MatchPresencesSection({ matchId, canManage }: MatchPresencesSect
       ) : checkIns.length === 0 ? (
         <EmptyState icon={UserCheck} title="Nenhuma presença lançada ainda." />
       ) : (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {checkIns.map((entry) => (
-            <PresenceCard
-              key={entry.player_id}
-              entry={entry}
-              canManage={canManage}
-              removing={removingId === entry.player_id}
-              onRemove={(name) => handleRemove(entry.player_id, name)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {visible.map((entry) => (
+              <PresenceCard
+                key={entry.player_id}
+                entry={entry}
+                canManage={canManage}
+                removing={removingId === entry.player_id}
+                onRemove={(name) => handleRemove(entry.player_id, name)}
+              />
+            ))}
+          </div>
+          {checkIns.length > PRESENCE_PREVIEW ? (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="flex w-full items-center justify-center gap-1 rounded-lg py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {expanded ? (
+                <>
+                  <ChevronUp className="size-3.5" />
+                  Mostrar menos
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="size-3.5" />
+                  Mostrar mais ({hiddenCount})
+                </>
+              )}
+            </button>
+          ) : null}
+        </>
       )}
 
       {canManage ? (

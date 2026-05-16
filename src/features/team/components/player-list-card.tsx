@@ -34,10 +34,9 @@ export function PlayerListCard({ player, onSelect }: PlayerListCardProps) {
   const primaryName = player.nickname?.trim() || player.display_name;
   const statusKey = player.player_status ?? 'active';
 
-  // Gols/Cartões stay as placeholders until the scouts spec; Frequência is live.
   const stats: StatSlot[] = [
-    { label: 'Gols', value: '—' },
-    { label: 'Pontos', value: '—' },
+    { label: 'Gols', value: String(player.total_goals) },
+    { label: 'Pontos', value: String(player.total_points) },
     {
       label: 'Frequência',
       value: frequencyLabel(player.check_in_count, player.total_match_count),

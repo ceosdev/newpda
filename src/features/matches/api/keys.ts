@@ -5,4 +5,5 @@ export const matchKeys = {
   checkIns: (id: string) => [...matchKeys.all, 'detail', id, 'check-ins'] as const,
   checkInCandidates: (id: string) =>
     [...matchKeys.all, 'detail', id, 'check-in-candidates'] as const,
+  scouts: (id: string) => [...matchKeys.all, 'detail', id, 'scouts'] as const,
 };

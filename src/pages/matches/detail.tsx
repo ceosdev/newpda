@@ -14,6 +14,7 @@ import {
 } from '@/features/matches/api/use-match-attendances';
 import { PlayerMiniCard } from '@/features/matches/components/player-mini-card';
 import { MatchPresencesSection } from '@/features/matches/components/match-presences-section';
+import { MatchScoutsSection } from '@/features/matches/components/match-scouts-section';
 import {
   ATTENDANCE_EMPTY_LABELS,
   ATTENDANCE_ORDER,
@@ -183,6 +184,8 @@ export function MatchDetailPage() {
           </section>
 
           <MatchPresencesSection matchId={match.id} canManage={canManage} />
+
+          <MatchScoutsSection matchId={match.id} canManage={canManage} />
         </div>
       </main>
     </div>
