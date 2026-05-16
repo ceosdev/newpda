@@ -2,13 +2,22 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-15 (após Spec 003 — lançamento de presenças)
+**Última atualização:** 2026-05-16 (após Spec 004 — lançar scouts)
 
 ---
 
 ## Status atual
 
 ### O que já está em produção (no repo + Supabase remoto)
+
+- **Lançar scouts (Spec 004)** (DB em `e6ac2d3`, UI em `2f7c0a9`)
+  - 4 migrations: tabela `match_scouts` (PK `(match_id, player_id)`, **FK composta** `(match_id, player_id)` → `match_check_ins` `on delete cascade` — só presente tem scout, e remover a presença ou excluir a pelada apaga o scout; seis contadores `integer not null default 0` com `check >= 0`; RLS `select` p/ aprovados, **sem policy de escrita**); RPC `record_match_scouts` (admin, upsert em lote — último valor prevalece, ignora quem não tem check-in) e `list_match_scouts` (aprovado, presentes × scouts com `coalesce` 0); `list_players_public` recriada (3ª vez) com `total_goals` + `total_points`; migration extra recria `list_match_scouts` com `check_in_count`/`total_match_count` (insumos da frequência).
+  - **"Pontos" é valor derivado, nunca armazenado** — `wins × 3 + draws`. A tabela guarda só `wins`/`draws`.
+  - Tela `/matches/:id` ganhou **Seção 3 — Scouts** com abas `Gols · Amarelos · Azuis · Vermelhos · Performance · Goleiros`. Abas de contador listam quem tem o valor > 0 (ordem decrescente). **Performance** (jogadores de linha) e **Goleiros** ordenam por **pontos → frequência → alfabética**; Performance mostra top 8, Goleiros top 1, ambas com label "Ver mais". `TabsList` rolável só no mobile (`overflow-x-auto sm:overflow-x-visible`).
+  - Modal **"Lançar scouts"** (`Dialog`/`Sheet`): RHF + `useFieldArray`, uma ficha por jogador presente com 6 campos numéricos inteiros (máx. 99 via Zod), busca em memória, **recupera os valores já gravados ao reabrir** (upsert). "Lançar" só habilita com o formulário `dirty`.
+  - **Seção 2 — Presenças** agora mostra os 10 primeiros presentes + label "Mostrar mais (N)" (ajuste de UX feito no escopo desta spec; presença é info de baixo sinal para o peladeiro).
+  - Card de `/team`: **Gols** e **Pontos** agora exibem dados reais — placeholders eliminados.
+  - **Limitações conhecidas:** sem teste unitário do hook de mutation — o repo ainda não tem Vitest/RTL configurado (mesma situação da Spec 003).
 
 - **Lançamento de presenças (Spec 003)** (DB em `c31f014`, UI em `204506a`)
   - 3 migrations: tabela `match_check_ins` (PK `(match_id, player_id)`, FK cascade p/ `matches`, restrict p/ `players`/`profiles`; RLS `select` p/ aprovados, **sem policy de escrita**); 4 RPCs `security definer` — `record_match_check_ins` (admin, lote, `ON CONFLICT DO NOTHING`, ignora inelegíveis), `remove_match_check_in` (admin, idempotente), `list_match_check_in_candidates` (admin), `list_match_check_ins` (aprovado); `list_players_public` recriada (drop+create) com `check_in_count` + `total_match_count`.
@@ -121,29 +130,24 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. Spec 004 — Scouts/lançamentos do dia (grande)
-- Próxima evolução natural da tela `/matches/:id` — eventos durante/após a pelada (gols, cartões, assistências?). Ainda em decisão.
-- Vai precisar de tabela `match_events` (ou `match_scouts`), RLS por admin para escrever, leitura para qualquer aprovado.
-- A tela de detalhes já tem o ganho de seções nomeadas — entra como **Seção 3**, depois de Respostas e Presenças. Os placeholders "Gols"/"Cartões" do card de `/team` passam a refletir dados reais.
-
-### 2. UI admin — gerenciamento de espectadores (pequeno)
+### 1. UI admin — gerenciamento de espectadores (pequeno)
 - Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
 - Decidir: adicionar uma aba/tela de espectadores reusando o sheet, ou expor via /admin/approvals com um filtro extra? Atual workaround é SQL direto.
 
-### 3. Polish do fluxo de auth (médio)
+### 2. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
 - Reset de senha (link por email).
 - Tela "Confirme seu email" + religar Confirm email no painel.
 
-### 4. Sorteio de times (médio/grande)
+### 3. Sorteio de times (médio/grande)
 - Depende de presença (Spec 002) estar implementada.
 - Modelar `match_teams` (snapshot do time sorteado para uma pelada).
 - Heurística do sorteio: decidir junto, com problema concreto. Skill ainda não está no modelo; pode usar presença + mensalismo + posição (goleiros distribuídos).
 
-### 5. Financeiro / mensalidade (grande, posterior)
+### 4. Financeiro / mensalidade (grande, posterior)
 - Marcar pago/atraso, histórico, eventualmente Pix/integração.
 
-### 6. PWA (fase final)
+### 5. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
 - Notificações push ficam para depois (Edge Function + Web Push).
 
