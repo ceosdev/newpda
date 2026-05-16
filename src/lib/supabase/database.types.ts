@@ -164,6 +164,60 @@ export type Database = {
           },
         ]
       }
+      match_scouts: {
+        Row: {
+          blue_cards: number
+          draws: number
+          goals: number
+          match_id: string
+          player_id: string
+          red_cards: number
+          updated_at: string
+          updated_by: string
+          wins: number
+          yellow_cards: number
+        }
+        Insert: {
+          blue_cards?: number
+          draws?: number
+          goals?: number
+          match_id: string
+          player_id: string
+          red_cards?: number
+          updated_at?: string
+          updated_by: string
+          wins?: number
+          yellow_cards?: number
+        }
+        Update: {
+          blue_cards?: number
+          draws?: number
+          goals?: number
+          match_id?: string
+          player_id?: string
+          red_cards?: number
+          updated_at?: string
+          updated_by?: string
+          wins?: number
+          yellow_cards?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_scouts_check_in_fk"
+            columns: ["match_id", "player_id"]
+            isOneToOne: true
+            referencedRelation: "match_check_ins"
+            referencedColumns: ["match_id", "player_id"]
+          },
+          {
+            foreignKeyName: "match_scouts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           created_at: string
@@ -578,6 +632,25 @@ export type Database = {
           profile_id: string
         }[]
       }
+      list_match_scouts: {
+        Args: { p_match_id: string }
+        Returns: {
+          avatar_url: string
+          blue_cards: number
+          check_in_count: number
+          display_name: string
+          draws: number
+          goals: number
+          nickname: string
+          player_id: string
+          preferred_position: string
+          profile_id: string
+          red_cards: number
+          total_match_count: number
+          wins: number
+          yellow_cards: number
+        }[]
+      }
       list_players_public: {
         Args: never
         Returns: {
@@ -589,11 +662,17 @@ export type Database = {
           player_status: Database["public"]["Enums"]["player_status"]
           preferred_position: string
           profile_id: string
+          total_goals: number
           total_match_count: number
+          total_points: number
         }[]
       }
       record_match_check_ins: {
         Args: { p_match_id: string; p_player_ids: string[] }
+        Returns: number
+      }
+      record_match_scouts: {
+        Args: { p_entries: Json; p_match_id: string }
         Returns: number
       }
       remove_match_check_in: {
