@@ -404,6 +404,76 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          occurred_on: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents: number | null
+          paid_on: string | null
+          player_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by: string
+          id?: string
+          notes?: string | null
+          occurred_on?: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents?: number | null
+          paid_on?: string | null
+          player_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string
+          id?: string
+          notes?: string | null
+          occurred_on?: string
+          operation?: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents?: number | null
+          paid_on?: string | null
+          player_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_transaction_type_id_fkey"
+            columns: ["transaction_type_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       matches_with_counts: {
@@ -579,6 +649,39 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_transaction: {
+        Args: {
+          p_amount_cents: number
+          p_notes?: string
+          p_occurred_on: string
+          p_operation: Database["public"]["Enums"]["transaction_operation"]
+          p_paid_amount_cents?: number
+          p_paid_on?: string
+          p_player_id?: string
+          p_transaction_type_id: string
+        }
+        Returns: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          occurred_on: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents: number | null
+          paid_on: string | null
+          player_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_transaction_type: {
         Args: {
           p_description: string
@@ -601,6 +704,7 @@ export type Database = {
         }
       }
       delete_match: { Args: { p_match_id: string }; Returns: undefined }
+      delete_transaction: { Args: { p_id: string }; Returns: undefined }
       delete_transaction_type: { Args: { p_id: string }; Returns: undefined }
       deny_user: {
         Args: { p_reason: string; p_target: string }
@@ -700,6 +804,15 @@ export type Database = {
           yellow_cards: number
         }[]
       }
+      list_player_options: {
+        Args: never
+        Returns: {
+          display_name: string
+          id: string
+          nickname: string
+          player_status: Database["public"]["Enums"]["player_status"]
+        }[]
+      }
       list_players_public: {
         Args: never
         Returns: {
@@ -714,6 +827,33 @@ export type Database = {
           total_goals: number
           total_match_count: number
           total_points: number
+        }[]
+      }
+      list_transactions: {
+        Args: {
+          p_limit: number
+          p_month?: number
+          p_offset: number
+          p_operation?: Database["public"]["Enums"]["transaction_operation"]
+          p_status?: Database["public"]["Enums"]["transaction_status"]
+        }
+        Returns: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          created_by_name: string
+          id: string
+          notes: string
+          occurred_on: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents: number
+          paid_on: string
+          player_display_name: string
+          player_id: string
+          player_nickname: string
+          status: Database["public"]["Enums"]["transaction_status"]
+          transaction_type_id: string
+          type_description: string
         }[]
       }
       record_match_check_ins: {
@@ -821,6 +961,30 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "players"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      settle_transaction: {
+        Args: { p_id: string }
+        Returns: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          occurred_on: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents: number | null
+          paid_on: string | null
+          player_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -958,6 +1122,40 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      update_transaction: {
+        Args: {
+          p_amount_cents: number
+          p_id: string
+          p_notes: string
+          p_occurred_on: string
+          p_operation: Database["public"]["Enums"]["transaction_operation"]
+          p_paid_amount_cents: number
+          p_paid_on: string
+          p_player_id: string
+          p_transaction_type_id: string
+        }
+        Returns: {
+          amount_cents: number
+          created_at: string
+          created_by: string
+          id: string
+          notes: string | null
+          occurred_on: string
+          operation: Database["public"]["Enums"]["transaction_operation"]
+          paid_amount_cents: number | null
+          paid_on: string | null
+          player_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"] | null
+          transaction_type_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       update_transaction_type: {
         Args: {
           p_description: string
@@ -996,6 +1194,8 @@ export type Database = {
       profile_role: "player" | "spectator"
       profile_status: "pending" | "approved" | "denied"
       theme_preference: "light" | "dark"
+      transaction_operation: "income" | "expense"
+      transaction_status: "open" | "partial" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1138,6 +1338,8 @@ export const Constants = {
       profile_role: ["player", "spectator"],
       profile_status: ["pending", "approved", "denied"],
       theme_preference: ["light", "dark"],
+      transaction_operation: ["income", "expense"],
+      transaction_status: ["open", "partial", "paid"],
     },
   },
 } as const
