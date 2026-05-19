@@ -2,13 +2,21 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-16 (após Spec 004 — lançar scouts)
+**Última atualização:** 2026-05-18 (após Spec 005 — tipos de lançamento)
 
 ---
 
 ## Status atual
 
 ### O que já está em produção (no repo + Supabase remoto)
+
+- **Tipos de lançamento — preparação do financeiro (Spec 005)** (DB em `c73b3b8`, UI em `01794bb`)
+  - 2 migrations: tabela `transaction_types` (`description` text com check de 1–80 caracteres, `suggested_amount_cents integer` nullable com check `>= 0`, `is_active`, timestamps; índice único sobre `lower(btrim(description))`). RLS **admin-only inclusive na leitura** — policy de `select` para `app.is_admin()`, **sem** policies de escrita. 3 RPCs `security definer`: `create/update/delete_transaction_type` com checagem `is_admin()`. `update_transaction_type` **não tem args com `default`** (full-replace explícito — default apagaria dado por omissão); aceita `null` em `p_suggested_amount_cents` para limpar o valor.
+  - **Dinheiro em centavos** (`integer`). `null` = sem valor sugerido (exibe `—`); `0` = valor sugerido válido (`R$ 0,00`). **Sem campo de direção** entrada/saída — tipos genéricos (decisão do usuário).
+  - **Exclusão é hard delete** (CRUD normal) — não há tabela de lançamentos ainda. **Pendência futura:** quando essa tabela existir, `delete_transaction_type` deve recusar a exclusão de um tipo com lançamentos vinculados.
+  - Nova rota `/admin/settings` (hub de configurações, `RequireAuth requireAdmin`) com a seção "Tipos de lançamento": listar (ativos primeiro, alfabético NFD), criar, editar, excluir. **Ativar/inativar é feito pela edição** — sem toggle inline.
+  - Componente compartilhado `CurrencyInput` (máscara acumulador de centavos, sem dependência nova) + helper `formatBRL` em `lib/utils.ts`. Nova feature `features/finance/`. Capability `manage_settings`; atalho de engrenagem no header da home gated por ela.
+  - **Limitações conhecidas:** sem teste unitário do hook de mutation — o repo ainda não tem Vitest/RTL (mesma situação das Specs 003/004).
 
 - **Lançar scouts (Spec 004)** (DB em `e6ac2d3`, UI em `2f7c0a9`)
   - 4 migrations: tabela `match_scouts` (PK `(match_id, player_id)`, **FK composta** `(match_id, player_id)` → `match_check_ins` `on delete cascade` — só presente tem scout, e remover a presença ou excluir a pelada apaga o scout; seis contadores `integer not null default 0` com `check >= 0`; RLS `select` p/ aprovados, **sem policy de escrita**); RPC `record_match_scouts` (admin, upsert em lote — último valor prevalece, ignora quem não tem check-in) e `list_match_scouts` (aprovado, presentes × scouts com `coalesce` 0); `list_players_public` recriada (3ª vez) com `total_goals` + `total_points`; migration extra recria `list_match_scouts` com `check_in_count`/`total_match_count` (insumos da frequência).
@@ -145,7 +153,9 @@ Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem suge
 - Heurística do sorteio: decidir junto, com problema concreto. Skill ainda não está no modelo; pode usar presença + mensalismo + posição (goleiros distribuídos).
 
 ### 4. Financeiro / mensalidade (grande, posterior)
-- Marcar pago/atraso, histórico, eventualmente Pix/integração.
+- A preparação — cadastro de **tipos de lançamento** — já foi entregue na Spec 005.
+- Falta: tabela de lançamentos em si, geração de mensalidades a partir de um tipo de lançamento, marcar pago/atraso, histórico, eventualmente Pix/integração.
+- Ao criar a tabela de lançamentos, **recriar `delete_transaction_type`** para recusar a exclusão de um tipo que tenha lançamentos vinculados.
 
 ### 5. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
