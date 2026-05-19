@@ -377,6 +377,33 @@ export type Database = {
           },
         ]
       }
+      transaction_types: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          suggested_amount_cents: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          suggested_amount_cents?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          suggested_amount_cents?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       matches_with_counts: {
@@ -552,7 +579,29 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_transaction_type: {
+        Args: {
+          p_description: string
+          p_is_active?: boolean
+          p_suggested_amount_cents?: number
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          suggested_amount_cents: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transaction_types"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       delete_match: { Args: { p_match_id: string }; Returns: undefined }
+      delete_transaction_type: { Args: { p_id: string }; Returns: undefined }
       deny_user: {
         Args: { p_reason: string; p_target: string }
         Returns: {
@@ -905,6 +954,28 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "players"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_transaction_type: {
+        Args: {
+          p_description: string
+          p_id: string
+          p_is_active: boolean
+          p_suggested_amount_cents: number
+        }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          suggested_amount_cents: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transaction_types"
           isOneToOne: true
           isSetofReturn: false
         }
