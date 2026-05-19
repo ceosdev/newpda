@@ -475,3 +475,11 @@ Os itens abaixo são **proibidos** no projeto. Se aparecerem num PR, devem ser r
 - Antes de adicionar lib: explique **por que o que já temos não resolve**.
 - Antes de criar abstração: mostre **três usos reais** que ela já tem.
 - Antes de declarar feature pronta: confirme que **mobile 360px**, **estados de loading/erro/vazio**, e **policy correspondente** foram tratados.
+
+---
+
+## 18. Regras de UI versionadas
+
+Regras de UI vivem em `.claude/rules/` e fazem parte da governança — são importadas abaixo e valem como este documento.
+
+@.claude/rules/ui-conventions.md

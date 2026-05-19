@@ -2,7 +2,7 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-18 (após Spec 005 — tipos de lançamento)
+**Última atualização:** 2026-05-18 (após Spec 006 — tela de financeiro)
 
 ---
 
@@ -10,10 +10,20 @@
 
 ### O que já está em produção (no repo + Supabase remoto)
 
+- **Tela de financeiro — lançamentos (Spec 006)** (DB em `87cb5a2`, UI em `27b15f0`, header/menu em `9bd1b41`)
+  - 7 migrations: enums `transaction_operation`/`transaction_status`; tabela `transactions` (data, tipo FK `on delete restrict`, jogador FK nullable, operação receita/despesa, valor, valor pago, data de pagamento, observação, `created_by`). `status` é **coluna gerada `stored`** (open/partial/paid) derivada de `amount_cents`/`paid_amount_cents` — nunca setada à mão. RLS `select` p/ qualquer aprovado; escrita só via RPC.
+  - RPCs `security definer`: `create/update/delete_transaction` (admin), `list_transactions` (aprovado, paginada, filtros de mês/operação/status), `list_player_options` (jogadores `active`/`injured` p/ o picker), `settle_transaction` (admin — "baixar" um lançamento aberto num passo). `delete_transaction_type` recriada para recusar a exclusão de um tipo **em uso** (`errcode P0001`, não mapeado, p/ a mensagem PT-BR chegar ao usuário) — resolve a pendência da Spec 005.
+  - **Valor pago 0 ou vazio = aberto** — as RPCs normalizam `0`→`NULL`; `0 < pago < valor` = parcial; `pago = valor` = pago. **Lançamento pago é editável** normalmente (a ideia inicial de torná-lo imutável foi descartada).
+  - **Leitura liberada a qualquer aprovado** (vê todos os lançamentos e abre o detalhe); criar/editar/excluir/baixar é só admin. Capability `manage_finance`.
+  - Rota `/finance`: lista com scroll infinito (20/página) agrupada por mês, **cards 2 por linha no desktop**; filtros de mês/operação/status server-side + apelido client-side (cai para a descrição do tipo quando o lançamento não tem jogador); botão verde **"Baixar"** no card e no detalhe (admin, status aberto); detalhe abre como `Dialog` no desktop e `Sheet` no mobile. Header da home com atalho de financeiro; no mobile a fileira de ícones colapsa numa gaveta "Menu" (`pages/home/main-menu.tsx`).
+  - Helpers `formatMonthLabel`/`monthKey`/`todayLocalIso` extraídos para `lib/date.ts` e `normalize` para `lib/utils.ts` (reuso entre matches/team/finance).
+  - Nova **regra de UI versionada** em `.claude/rules/ui-conventions.md` (detalhe = modal no desktop), importada pelo CLAUDE.md §18.
+  - **Limitações conhecidas:** filtro de apelido alcança só o que já foi carregado (escolha do usuário); sem teste unitário — repo ainda sem Vitest/RTL.
+
 - **Tipos de lançamento — preparação do financeiro (Spec 005)** (DB em `c73b3b8`, UI em `01794bb`)
   - 2 migrations: tabela `transaction_types` (`description` text com check de 1–80 caracteres, `suggested_amount_cents integer` nullable com check `>= 0`, `is_active`, timestamps; índice único sobre `lower(btrim(description))`). RLS **admin-only inclusive na leitura** — policy de `select` para `app.is_admin()`, **sem** policies de escrita. 3 RPCs `security definer`: `create/update/delete_transaction_type` com checagem `is_admin()`. `update_transaction_type` **não tem args com `default`** (full-replace explícito — default apagaria dado por omissão); aceita `null` em `p_suggested_amount_cents` para limpar o valor.
   - **Dinheiro em centavos** (`integer`). `null` = sem valor sugerido (exibe `—`); `0` = valor sugerido válido (`R$ 0,00`). **Sem campo de direção** entrada/saída — tipos genéricos (decisão do usuário).
-  - **Exclusão é hard delete** (CRUD normal) — não há tabela de lançamentos ainda. **Pendência futura:** quando essa tabela existir, `delete_transaction_type` deve recusar a exclusão de um tipo com lançamentos vinculados.
+  - **Exclusão é hard delete** (CRUD normal). A guarda contra excluir um tipo já usado por lançamentos foi adicionada na Spec 006.
   - Nova rota `/admin/settings` (hub de configurações, `RequireAuth requireAdmin`) com a seção "Tipos de lançamento": listar (ativos primeiro, alfabético NFD), criar, editar, excluir. **Ativar/inativar é feito pela edição** — sem toggle inline.
   - Componente compartilhado `CurrencyInput` (máscara acumulador de centavos, sem dependência nova) + helper `formatBRL` em `lib/utils.ts`. Nova feature `features/finance/`. Capability `manage_settings`; atalho de engrenagem no header da home gated por ela.
   - **Limitações conhecidas:** sem teste unitário do hook de mutation — o repo ainda não tem Vitest/RTL (mesma situação das Specs 003/004).
@@ -152,10 +162,9 @@ Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem suge
 - Modelar `match_teams` (snapshot do time sorteado para uma pelada).
 - Heurística do sorteio: decidir junto, com problema concreto. Skill ainda não está no modelo; pode usar presença + mensalismo + posição (goleiros distribuídos).
 
-### 4. Financeiro / mensalidade (grande, posterior)
-- A preparação — cadastro de **tipos de lançamento** — já foi entregue na Spec 005.
-- Falta: tabela de lançamentos em si, geração de mensalidades a partir de um tipo de lançamento, marcar pago/atraso, histórico, eventualmente Pix/integração.
-- Ao criar a tabela de lançamentos, **recriar `delete_transaction_type`** para recusar a exclusão de um tipo que tenha lançamentos vinculados.
+### 4. Financeiro — evolução (médio/grande)
+- Tipos de lançamento (Spec 005) e a tela de lançamentos (Spec 006) já entregues.
+- Falta: **geração de mensalidades em lote** a partir de um tipo de lançamento; saldo/totais/relatórios e fechamento de mês; eventualmente Pix/integração e notificações de cobrança.
 
 ### 5. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
