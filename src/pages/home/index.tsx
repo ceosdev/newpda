@@ -1,4 +1,4 @@
-import { CalendarDays, LogOut, Settings, ShieldCheck, User, Users } from 'lucide-react';
+import { CalendarDays, LogOut, Settings, ShieldCheck, User, Users, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
@@ -6,6 +6,7 @@ import { useSignOut } from '@/features/auth/api/use-sign-out';
 import { useCurrentProfile } from '@/features/auth/api/use-current-profile';
 import { usePermissions } from '@/features/auth/hooks/use-permissions';
 import { usePendingProfiles } from '@/features/admin/api/use-pending-profiles';
+import { MainMenu } from '@/pages/home/main-menu';
 
 export function HomePage() {
   const signOut = useSignOut();
@@ -32,66 +33,76 @@ export function HomePage() {
         </Link>
         <div className="flex items-center gap-1">
           <div className="hidden pr-2 text-right sm:block">
-            <p className="text-xs font-medium leading-tight">{profile?.display_name}</p>
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs leading-tight font-medium">{profile?.display_name}</p>
+            <p className="text-muted-foreground text-[10px] tracking-wide uppercase">
               {isAdmin ? 'Admin' : profile?.role === 'player' ? 'Jogador' : 'Espectador'}
             </p>
           </div>
           <ThemeToggle />
-          {canManageApprovals ? (
+          <div className="hidden items-center gap-1 sm:flex">
+            {canManageApprovals ? (
+              <Button
+                asChild
+                variant="ghost"
+                size="icon"
+                aria-label={
+                  hasPending
+                    ? `Aprovações (${pendingCount} pendente${pendingCount > 1 ? 's' : ''})`
+                    : 'Aprovações'
+                }
+                className="relative"
+              >
+                <Link to="/admin/approvals">
+                  <ShieldCheck className="size-4" />
+                  {hasPending ? (
+                    <span
+                      aria-hidden
+                      className="bg-primary ring-background absolute top-1.5 right-1.5 size-2 rounded-full ring-2"
+                    />
+                  ) : null}
+                </Link>
+              </Button>
+            ) : null}
+            {canManageSettings ? (
+              <Button asChild variant="ghost" size="icon" aria-label="Configurações">
+                <Link to="/admin/settings">
+                  <Settings className="size-4" />
+                </Link>
+              </Button>
+            ) : null}
+            <Button asChild variant="ghost" size="icon" aria-label="Peladas">
+              <Link to="/matches">
+                <CalendarDays className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="icon" aria-label="Financeiro">
+              <Link to="/finance">
+                <Wallet className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="icon" aria-label="Time">
+              <Link to="/team">
+                <Users className="size-4" />
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="icon" aria-label="Meu cadastro">
+              <Link to="/me">
+                <User className="size-4" />
+              </Link>
+            </Button>
             <Button
-              asChild
               variant="ghost"
               size="icon"
-              aria-label={
-                hasPending
-                  ? `Aprovações (${pendingCount} pendente${pendingCount > 1 ? 's' : ''})`
-                  : 'Aprovações'
-              }
-              className="relative"
+              onClick={() => signOut.mutate()}
+              disabled={signOut.isPending}
+              aria-label="Sair"
             >
-              <Link to="/admin/approvals">
-                <ShieldCheck className="size-4" />
-                {hasPending ? (
-                  <span
-                    aria-hidden
-                    className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary ring-2 ring-background"
-                  />
-                ) : null}
-              </Link>
+              <LogOut className="size-4" />
             </Button>
-          ) : null}
-          {canManageSettings ? (
-            <Button asChild variant="ghost" size="icon" aria-label="Configurações">
-              <Link to="/admin/settings">
-                <Settings className="size-4" />
-              </Link>
-            </Button>
-          ) : null}
-          <Button asChild variant="ghost" size="icon" aria-label="Peladas">
-            <Link to="/matches">
-              <CalendarDays className="size-4" />
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" aria-label="Time">
-            <Link to="/team">
-              <Users className="size-4" />
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" aria-label="Meu cadastro">
-            <Link to="/me">
-              <User className="size-4" />
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => signOut.mutate()}
-            disabled={signOut.isPending}
-            aria-label="Sair"
-          >
-            <LogOut className="size-4" />
-          </Button>
+          </div>
+          <div className="sm:hidden">
+            <MainMenu />
+          </div>
         </div>
       </header>
 
@@ -106,7 +117,7 @@ export function HomePage() {
             <h1 className="text-3xl font-semibold tracking-tight">
               Bem-vindo{profile?.display_name ? `, ${profile.display_name}` : ''}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Gerenciador da pelada — em desenvolvimento.
             </p>
           </div>
