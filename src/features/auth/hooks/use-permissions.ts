@@ -15,6 +15,7 @@ function computeCapabilities(profile: Profile | null | undefined): Set<Capabilit
     caps.add('manage_players');
     caps.add('manage_matches');
     caps.add('manage_admins');
+    caps.add('manage_settings');
   }
 
   return caps;

@@ -12,6 +12,7 @@ import { AccessDeniedPage } from '@/pages/access-denied';
 import { HomePage } from '@/pages/home';
 import { MePage } from '@/pages/me';
 import { ApprovalsPage } from '@/pages/admin/approvals';
+import { SettingsPage } from '@/pages/admin/settings';
 import { TeamPage } from '@/pages/team';
 import { MatchesPage } from '@/pages/matches';
 import { MatchDetailPage } from '@/pages/matches/detail';
@@ -51,6 +52,7 @@ export function App() {
 
         <Route element={<RequireAuth requireAdmin />}>
           <Route path="/admin/approvals" element={<ApprovalsPage />} />
+          <Route path="/admin/settings" element={<SettingsPage />} />
         </Route>
 
         <Route path="*" element={<RequireAuth />}>

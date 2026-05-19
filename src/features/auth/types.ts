@@ -10,4 +10,5 @@ export type Capability =
   | 'manage_players'
   | 'manage_matches'
   | 'manage_admins'
+  | 'manage_settings'
   | 'edit_self_profile';

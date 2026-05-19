@@ -30,7 +30,21 @@ const PG_HINTS: Array<{ pattern: RegExp; message: string }> = [
     pattern: /players_shirt_number_active_idx/,
     message: 'Esse número de camisa já está em uso por outro jogador.',
   },
+  {
+    pattern: /transaction_types_description_unique_idx/,
+    message: 'Já existe um tipo de lançamento com essa descrição.',
+  },
 ];
+
+/** True when the error is a "row not found" raised by a security-definer RPC. */
+export function isNotFoundError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    String((error as Record<string, unknown>).code) === 'P0002'
+  );
+}
 
 export function mapSupabaseError(error: AnySupabaseError): string {
   if (!error) return 'Ocorreu um erro inesperado.';

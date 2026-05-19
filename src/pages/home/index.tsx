@@ -1,4 +1,4 @@
-import { CalendarDays, LogOut, ShieldCheck, User, Users } from 'lucide-react';
+import { CalendarDays, LogOut, Settings, ShieldCheck, User, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
@@ -12,6 +12,7 @@ export function HomePage() {
   const { data: profile } = useCurrentProfile();
   const { isAdmin, can } = usePermissions();
   const canManageApprovals = can('manage_approvals');
+  const canManageSettings = can('manage_settings');
   const { data: pending } = usePendingProfiles({ enabled: canManageApprovals });
   const pendingCount = pending?.length ?? 0;
   const hasPending = pendingCount > 0;
@@ -57,6 +58,13 @@ export function HomePage() {
                     className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary ring-2 ring-background"
                   />
                 ) : null}
+              </Link>
+            </Button>
+          ) : null}
+          {canManageSettings ? (
+            <Button asChild variant="ghost" size="icon" aria-label="Configurações">
+              <Link to="/admin/settings">
+                <Settings className="size-4" />
               </Link>
             </Button>
           ) : null}
