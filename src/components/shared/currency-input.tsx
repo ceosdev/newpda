@@ -6,8 +6,8 @@ import { formatBRL } from '@/lib/utils';
 const MAX_CENTS = 99_999_999;
 
 type CurrencyInputProps = {
-  /** Current amount in cents, or null when the field is empty. */
-  value: number | null;
+  /** Current amount in cents, or null/undefined when the field is empty. */
+  value: number | null | undefined;
   onChange: (value: number | null) => void;
   onBlur?: () => void;
   name?: string;
@@ -41,7 +41,7 @@ export const CurrencyInput = forwardRef<HTMLInputElement, CurrencyInputProps>(
         ref={ref}
         type="text"
         inputMode="numeric"
-        value={value === null ? '' : formatBRL(value)}
+        value={value == null ? '' : formatBRL(value)}
         onChange={handleChange}
       />
     );

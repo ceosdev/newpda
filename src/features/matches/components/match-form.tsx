@@ -40,9 +40,9 @@ import {
   DEFAULT_MATCH_TIME,
   MATCH_STATUS_LABELS,
   formatMatchTime,
-  todayLocalIso,
   type MatchStatus,
 } from '@/features/matches/lib/labels';
+import { todayLocalIso } from '@/lib/date';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mapSupabaseError } from '@/lib/supabase/errors';
 

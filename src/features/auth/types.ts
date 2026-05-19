@@ -11,4 +11,5 @@ export type Capability =
   | 'manage_matches'
   | 'manage_admins'
   | 'manage_settings'
+  | 'manage_finance'
   | 'edit_self_profile';

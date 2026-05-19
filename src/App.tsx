@@ -16,6 +16,7 @@ import { SettingsPage } from '@/pages/admin/settings';
 import { TeamPage } from '@/pages/team';
 import { MatchesPage } from '@/pages/matches';
 import { MatchDetailPage } from '@/pages/matches/detail';
+import { FinancePage } from '@/pages/finance';
 
 export function App() {
   return (
@@ -48,6 +49,7 @@ export function App() {
           <Route path="/team" element={<TeamPage />} />
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/matches/:id" element={<MatchDetailPage />} />
+          <Route path="/finance" element={<FinancePage />} />
         </Route>
 
         <Route element={<RequireAuth requireAdmin />}>

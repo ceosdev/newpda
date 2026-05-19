@@ -14,7 +14,7 @@ import { MatchCard } from '@/features/matches/components/match-card';
 import { MatchForm } from '@/features/matches/components/match-form';
 import { CloseMatchDialog } from '@/features/matches/components/close-match-dialog';
 import { DeleteMatchDialog } from '@/features/matches/components/delete-match-dialog';
-import { formatMonthLabel, monthKey } from '@/features/matches/lib/labels';
+import { formatMonthLabel, monthKey } from '@/lib/date';
 import { usePermissions } from '@/features/auth/hooks/use-permissions';
 import { useCurrentPlayer } from '@/features/me/api/use-current-player';
 import { mapSupabaseError } from '@/lib/supabase/errors';

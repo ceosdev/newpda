@@ -14,3 +14,12 @@ const brlFormatter = new Intl.NumberFormat('pt-BR', {
 export function formatBRL(cents: number): string {
   return brlFormatter.format(cents / 100);
 }
+
+/** Lowercases and strips diacritics for accent-insensitive search/compare. */
+export function normalize(value: string | null | undefined): string {
+  return (value ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+}

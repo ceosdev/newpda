@@ -31,21 +31,13 @@ import { useRecordMatchCheckIns } from '@/features/matches/api/use-record-match-
 import { positionLabel } from '@/features/team/lib/labels';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mapSupabaseError } from '@/lib/supabase/errors';
-import { cn } from '@/lib/utils';
+import { cn, normalize } from '@/lib/utils';
 
 type RecordPresenceModalProps = {
   matchId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
-
-function normalize(value: string | null | undefined): string {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 function CandidateRow({
   candidate,

@@ -12,14 +12,7 @@ import { useTeamPlayers, type PlayerListItem } from '@/features/team/api/use-tea
 import { PlayerListCard } from '@/features/team/components/player-list-card';
 import { PlayerDetailSheet } from '@/features/team/components/player-detail-sheet';
 import { mapSupabaseError } from '@/lib/supabase/errors';
-
-function normalize(value: string | null | undefined): string {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-}
+import { normalize } from '@/lib/utils';
 
 function filterPlayers(players: PlayerListItem[], query: string): PlayerListItem[] {
   const q = normalize(query);

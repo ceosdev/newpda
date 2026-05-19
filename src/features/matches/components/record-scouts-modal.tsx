@@ -33,20 +33,13 @@ import {
 } from '@/features/matches/schemas/match-scouts.schema';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { mapSupabaseError } from '@/lib/supabase/errors';
+import { normalize } from '@/lib/utils';
 
 type RecordScoutsModalProps = {
   matchId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
-
-function normalize(value: string | null | undefined): string {
-  return (value ?? '')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 export function RecordScoutsModal({ matchId, open, onOpenChange }: RecordScoutsModalProps) {
   const isDesktop = useMediaQuery('(min-width: 640px)');

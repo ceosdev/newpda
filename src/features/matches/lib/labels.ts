@@ -55,24 +55,3 @@ export function formatMatchTime(value: string): string {
   // Postgres time comes back as 'HH:MM:SS' — trim seconds for display.
   return value.slice(0, 5);
 }
-
-export function monthKey(iso: string): string {
-  return iso.slice(0, 7);
-}
-
-export function formatMonthLabel(iso: string): string {
-  const [y, m] = iso.split('-');
-  if (!y || !m) return iso;
-  const date = new Date(Number(y), Number(m) - 1, 1);
-  const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(date);
-  return `${monthName}/${y}`;
-}
-
-export function todayLocalIso(): string {
-  // Local-day YYYY-MM-DD without UTC drift from toISOString().
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, '0');
-  const d = String(now.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
