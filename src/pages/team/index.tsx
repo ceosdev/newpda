@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Search, Shield, Users, X } from 'lucide-react';
+import { ArrowLeft, Eye, Search, Shield, Users, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/shared/empty-state';
 import { SectionHeading } from '@/components/shared/section-heading';
 import { useTeamPlayers, type PlayerListItem } from '@/features/team/api/use-team-players';
+import {
+  useTeamSpectators,
+  type SpectatorListItem,
+} from '@/features/team/api/use-team-spectators';
 import { PlayerListCard } from '@/features/team/components/player-list-card';
+import { SpectatorListCard } from '@/features/team/components/spectator-list-card';
 import { PlayerDetailSheet } from '@/features/team/components/player-detail-sheet';
 import { mapSupabaseError } from '@/lib/supabase/errors';
 import { normalize } from '@/lib/utils';
@@ -23,7 +28,13 @@ function filterPlayers(players: PlayerListItem[], query: string): PlayerListItem
   });
 }
 
-type TabId = 'active' | 'inactive';
+function filterSpectators(spectators: SpectatorListItem[], query: string): SpectatorListItem[] {
+  const q = normalize(query);
+  if (!q) return spectators;
+  return spectators.filter((s) => normalize(s.display_name).includes(q));
+}
+
+type TabId = 'active' | 'inactive' | 'spectators';
 
 function TeamSearchInput({
   value,
@@ -79,10 +90,12 @@ function PlayersGrid({
 
 export function TeamPage() {
   const { data, isLoading, isError, error, refetch, isRefetching } = useTeamPlayers();
+  const spectators = useTeamSpectators();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabId>('active');
   const [queryActive, setQueryActive] = useState('');
   const [queryInactive, setQueryInactive] = useState('');
+  const [querySpectators, setQuerySpectators] = useState('');
 
   const { activeRoster, inactiveRoster } = useMemo(() => {
     const active: PlayerListItem[] = [];
@@ -113,12 +126,20 @@ export function TeamPage() {
     return { goalkeepers: gks, fieldPlayers: others };
   }, [filteredActive]);
 
+  const spectatorRoster = useMemo(() => spectators.data ?? [], [spectators.data]);
+  const filteredSpectators = useMemo(
+    () => filterSpectators(spectatorRoster, querySpectators),
+    [spectatorRoster, querySpectators],
+  );
+
   const totalActive = activeRoster.length;
   const totalInactive = inactiveRoster.length;
-  const totalAll = totalActive + totalInactive;
+  const totalSpectators = spectatorRoster.length;
+  const totalAll = totalActive + totalInactive + totalSpectators;
 
   const isFilteringActive = queryActive.trim().length > 0;
   const isFilteringInactive = queryInactive.trim().length > 0;
+  const isFilteringSpectators = querySpectators.trim().length > 0;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -165,12 +186,12 @@ export function TeamPage() {
           ) : totalAll === 0 ? (
             <EmptyState
               icon={Users}
-              title="Nenhum jogador ainda"
-              description="Quando alguém for aprovado como jogador, aparece aqui."
+              title="Nenhum membro ainda"
+              description="Quando alguém for aprovado, aparece aqui."
             />
           ) : (
             <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="gap-3">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="active">
                   Ativos
                   <span className="ml-1 text-[10px] tabular-nums text-muted-foreground/80">
@@ -181,6 +202,12 @@ export function TeamPage() {
                   Inativos
                   <span className="ml-1 text-[10px] tabular-nums text-muted-foreground/80">
                     {totalInactive}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="spectators">
+                  Espectadores
+                  <span className="ml-1 text-[10px] tabular-nums text-muted-foreground/80">
+                    {totalSpectators}
                   </span>
                 </TabsTrigger>
               </TabsList>
@@ -247,6 +274,57 @@ export function TeamPage() {
                   )
                 ) : (
                   <PlayersGrid players={filteredInactive} onSelect={setSelectedId} />
+                )}
+              </TabsContent>
+
+              <TabsContent value="spectators" className="flex flex-col gap-4">
+                <TeamSearchInput
+                  value={querySpectators}
+                  onChange={setQuerySpectators}
+                  placeholder="Buscar espectadores"
+                />
+
+                {spectators.isLoading ? (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <Skeleton className="h-[4.5rem] w-full" />
+                    <Skeleton className="h-[4.5rem] w-full" />
+                    <Skeleton className="h-[4.5rem] w-full" />
+                  </div>
+                ) : spectators.isError ? (
+                  <Alert variant="destructive">
+                    <AlertDescription className="flex flex-col gap-3">
+                      <span>{mapSupabaseError(spectators.error)}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => spectators.refetch()}
+                        disabled={spectators.isRefetching}
+                        className="self-start"
+                      >
+                        Tentar novamente
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                ) : filteredSpectators.length === 0 ? (
+                  isFilteringSpectators ? (
+                    <EmptyState
+                      icon={Search}
+                      title={`Nada para "${querySpectators.trim()}"`}
+                      description="Tente outro nome."
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={Eye}
+                      title="Nenhum espectador"
+                      description="Membros aprovados como espectadores aparecem aqui."
+                    />
+                  )
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredSpectators.map((spectator) => (
+                      <SpectatorListCard key={spectator.profile_id} spectator={spectator} />
+                    ))}
+                  </div>
                 )}
               </TabsContent>
             </Tabs>

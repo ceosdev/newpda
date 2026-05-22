@@ -836,6 +836,15 @@ export type Database = {
           total_points: number
         }[]
       }
+      list_spectators: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          display_name: string
+          is_admin: boolean
+          profile_id: string
+        }[]
+      }
       list_transactions: {
         Args: {
           p_limit: number
