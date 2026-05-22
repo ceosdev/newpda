@@ -2,13 +2,29 @@
 
 > Arquivo de continuidade entre sessões. **Atualize ao final de cada iteração**, mantendo apenas o que NÃO é derivável do código/git. Para regras técnicas perenes, ver [`CLAUDE.md`](./CLAUDE.md).
 
-**Última atualização:** 2026-05-18 (após Spec 006 — tela de financeiro)
+**Última atualização:** 2026-05-21 (após Spec 007 — geração de mensalidades + aba de espectadores em /team)
 
 ---
 
 ## Status atual
 
 ### O que já está em produção (no repo + Supabase remoto)
+
+- **Aba de espectadores em `/team`** (commit `679b8ca`)
+  - Migration `20260519140000_list_spectators`: RPC `list_spectators()` `security definer` (gated por `app.is_approved()`) que retorna os profiles aprovados com `role='spectator'` — eles não têm row em `players`, então a tela precisava de uma fonte separada.
+  - Página `/team` ganha 3ª aba **Espectadores** com contador, busca por nome (normalizada NFD), badge admin quando aplicável. `EmptyState` específico quando vazio. Skeleton independente do roster de jogadores.
+  - Card próprio (`SpectatorListCard`) sem stats de jogo — só foto, nome e badge admin. Reusa layout do `PlayerListCard` mas sem a faixa Gols/Pontos/Frequência (espectador não tem `players`).
+  - Resolve a "Limitação conhecida" do roster da `/team` (era item 1 do backlog).
+  - **Fora de escopo (intencional):** promover espectador → player pela UI da `/team`. `change_user_role` segue acessível só via `/admin/approvals` ou SQL.
+
+- **Geração de mensalidades em lote (Spec 007)** (commit `704e48e`)
+  - 2 migrations: `20260519120000_generate_monthly_fees` cria as RPCs `preview_monthly_fees(p_month)` e `generate_monthly_fees(p_month)` (`security definer`, admin-only). `20260519130000_monthly_fees_player_filter` ajusta o filtro de elegíveis — **drop do `is_monthly`** (toda linha de `players` é mensalista por definição, já que `role='spectator'` não tem `players` row) e **exclui goleiros** (`preferred_position = 'goalkeeper'`); jogadores sem posição entram.
+  - **Determinação do ano:** ano corrente, exceto na virada — se `current_month=dez` e `p_month=jan`, usa ano corrente + 1. Permite gerar dezembro→janeiro antecipadamente sem ano arbitrário.
+  - **Idempotente por jogador:** o insert é gated por um `not exists` que checa se já há mensalidade do mesmo tipo no mês/ano alvo para aquele jogador. Reexecutar pula quem já tem. O retorno `(generated, skipped)` informa quantos foram criados vs. ignorados.
+  - **Tipo "Mensalidade" é localizado case-insensitive** (`lower(btrim(description)) = 'mensalidade'`) e precisa estar `is_active=true` e ter `suggested_amount_cents` setado. Falhas devolvem `errcode 22023` com mensagem PT-BR específica (sem tipo, sem valor, sem jogador elegível).
+  - **UI**: botão **"Gerar mensalidades"** (variante `secondary`, ícone `CalendarPlus`) ao lado de "Novo lançamento" no header (`sm` em diante) e como FAB extra no mobile. Modal/Sheet responsivo com `Select` de mês (corrente pré-selecionado), preview server-side com nº de elegíveis e nº já gerados, e confirmação encadeada via `AlertDialog` — extra "Você já gerou as mensalidades deste mês. Tem certeza?" quando preview indica `already_generated_count > 0`.
+  - Toast de sucesso informa quantas foram criadas e quantas foram puladas (`X mensalidade(s) gerada(s). Y já existia(m).`); invalida `transactionKeys.list()`.
+  - **Limitações conhecidas (intencionais, fora de escopo):** sem flag/marca para distinguir mensalidade gerada em lote de manual; sem desfazer/reverter; só ano corrente (e a exceção dez→jan).
 
 - **Tela de financeiro — lançamentos (Spec 006)** (DB em `87cb5a2`, UI em `27b15f0`, header/menu em `9bd1b41`)
   - 7 migrations: enums `transaction_operation`/`transaction_status`; tabela `transactions` (data, tipo FK `on delete restrict`, jogador FK nullable, operação receita/despesa, valor, valor pago, data de pagamento, observação, `created_by`). `status` é **coluna gerada `stored`** (open/partial/paid) derivada de `amount_cents`/`paid_amount_cents` — nunca setada à mão. RLS `select` p/ qualquer aprovado; escrita só via RPC.
@@ -148,25 +164,21 @@
 
 Cada uma exige plano formal (§15 do CLAUDE.md) antes de implementar. Ordem sugerida abaixo é por valor + dependência, não compromisso firme.
 
-### 1. UI admin — gerenciamento de espectadores (pequeno)
-- Hoje a /team mostra só `role='player'`. Promover espectador → player (e o reverso) já é coberto por `change_user_role`, mas não há tela listando espectadores.
-- Decidir: adicionar uma aba/tela de espectadores reusando o sheet, ou expor via /admin/approvals com um filtro extra? Atual workaround é SQL direto.
-
-### 2. Polish do fluxo de auth (médio)
+### 1. Polish do fluxo de auth (médio)
 - Google OAuth (Supabase já suporta, basta habilitar provider + ajustar callbacks).
 - Reset de senha (link por email).
 - Tela "Confirme seu email" + religar Confirm email no painel.
 
-### 3. Sorteio de times (médio/grande)
+### 2. Sorteio de times (médio/grande)
 - Depende de presença (Spec 002) estar implementada.
 - Modelar `match_teams` (snapshot do time sorteado para uma pelada).
 - Heurística do sorteio: decidir junto, com problema concreto. Skill ainda não está no modelo; pode usar presença + mensalismo + posição (goleiros distribuídos).
 
-### 4. Financeiro — evolução (médio/grande)
-- Tipos de lançamento (Spec 005) e a tela de lançamentos (Spec 006) já entregues.
-- Falta: **geração de mensalidades em lote** a partir de um tipo de lançamento; saldo/totais/relatórios e fechamento de mês; eventualmente Pix/integração e notificações de cobrança.
+### 3. Financeiro — evolução (médio/grande)
+- Tipos de lançamento (Spec 005), tela de lançamentos (Spec 006) e geração em lote de mensalidades (Spec 007) já entregues.
+- Falta: saldo/totais/relatórios e fechamento de mês; marca/origem do lançamento (distinguir gerado em lote de manual) caso vire requisito; eventualmente Pix/integração e notificações de cobrança; promover espectador → player pela própria `/team`.
 
-### 5. PWA (fase final)
+### 4. PWA (fase final)
 - `vite-plugin-pwa`, manifesto, estratégias de cache, fila offline de mutations.
 - Notificações push ficam para depois (Edge Function + Web Push).
 
