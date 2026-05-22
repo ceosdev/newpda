@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Loader2, Plus, Wallet } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, Loader2, Plus, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,7 @@ import {
 import { TransactionFilters } from '@/features/finance/components/transaction-filters';
 import { TransactionCard } from '@/features/finance/components/transaction-card';
 import { TransactionFormModal } from '@/features/finance/components/transaction-form-modal';
+import { GenerateMonthlyFeesModal } from '@/features/finance/components/generate-monthly-fees-modal';
 import { TransactionDetailSheet } from '@/features/finance/components/transaction-detail-sheet';
 import { DeleteTransactionDialog } from '@/features/finance/components/delete-transaction-dialog';
 import { SettleTransactionDialog } from '@/features/finance/components/settle-transaction-dialog';
@@ -34,6 +35,7 @@ export function FinancePage() {
   const [nickname, setNickname] = useState('');
 
   const [editing, setEditing] = useState<EditingState>(null);
+  const [feesOpen, setFeesOpen] = useState(false);
   const [detail, setDetail] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const [settling, setSettling] = useState<Transaction | null>(null);
@@ -121,15 +123,27 @@ export function FinancePage() {
         </Button>
         <h1 className="flex-1 text-sm font-semibold tracking-tight">Financeiro</h1>
         {canManage ? (
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setEditing({ mode: 'create' })}
-            className="hidden sm:inline-flex"
-          >
-            <Plus className="size-4" />
-            Novo lançamento
-          </Button>
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setFeesOpen(true)}
+              className="hidden sm:inline-flex"
+            >
+              <CalendarPlus className="size-4" />
+              Gerar mensalidades
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setEditing({ mode: 'create' })}
+              className="hidden sm:inline-flex"
+            >
+              <Plus className="size-4" />
+              Novo lançamento
+            </Button>
+          </>
         ) : null}
       </header>
 
@@ -246,15 +260,28 @@ export function FinancePage() {
       </main>
 
       {canManage ? (
-        <Button
-          type="button"
-          aria-label="Novo lançamento"
-          onClick={() => setEditing({ mode: 'create' })}
-          className="fixed right-4 bottom-4 size-12 rounded-full shadow-lg sm:hidden"
-        >
-          <Plus className="size-5" />
-        </Button>
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Gerar mensalidades"
+            onClick={() => setFeesOpen(true)}
+            className="fixed right-4 bottom-20 size-12 rounded-full shadow-lg sm:hidden"
+          >
+            <CalendarPlus className="size-5" />
+          </Button>
+          <Button
+            type="button"
+            aria-label="Novo lançamento"
+            onClick={() => setEditing({ mode: 'create' })}
+            className="fixed right-4 bottom-4 size-12 rounded-full shadow-lg sm:hidden"
+          >
+            <Plus className="size-5" />
+          </Button>
+        </>
       ) : null}
+
+      <GenerateMonthlyFeesModal open={feesOpen} onOpenChange={setFeesOpen} />
 
       <TransactionFormModal
         {...(editing?.mode === 'edit'

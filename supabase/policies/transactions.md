@@ -2,8 +2,10 @@
 
 Espelho da superfície de autorização da tabela `transactions`. Fonte de verdade
 é o SQL em `supabase/migrations/20260518130000_transactions.sql`,
-`20260518130001_transactions_rpcs.sql` e
-`20260518130002_transaction_types_delete_guard.sql`.
+`20260518130001_transactions_rpcs.sql`,
+`20260518130002_transaction_types_delete_guard.sql`,
+`20260519120000_generate_monthly_fees.sql` e
+`20260519130000_monthly_fees_player_filter.sql` (Spec 007).
 
 ## Tabela `transactions`
 
@@ -30,6 +32,8 @@ Toda escrita passa pelas RPCs `security definer` abaixo.
 | `delete_transaction(p_id)`                                    | admin                          | Hard delete. Rejeita `id` inexistente (`P0002`).                                                                                                   |
 | `list_transactions(p_limit, p_offset, p_operation, p_status)` | aprovado (`app.is_approved()`) | Lista paginada + filtros; join de tipo, jogador e criador.                                                                                         |
 | `list_player_options()`                                       | aprovado                       | Jogadores do elenco (`active`/`injured`, não arquivados) para o picker do formulário.                                                              |
+| `preview_monthly_fees(p_month)`                               | admin                          | Read-only. Deriva o ano alvo (regra de dezembro), e retorna se o tipo «Mensalidade» ativo existe, seu valor sugerido, nº de jogadores elegíveis e nº de mensalidades já lançadas no mês/ano. |
+| `generate_monthly_fees(p_month)`                              | admin                          | Insere, atomicamente, uma mensalidade em aberto (`income`) para cada jogador ativo (`active`/`injured`, não arquivado, exceto goleiros), `occurred_on` no dia 1 do mês/ano alvo, pulando quem já tem mensalidade no período. Recusa tipo «Mensalidade» inexistente/inativo, sem valor sugerido, ou ausência de jogadores elegíveis (`22023`). |
 
 Todas checam o papel no topo (`42501` se não autorizado), `grant execute` só
 para `authenticated`, `revoke` de `public`/`anon`.
@@ -45,8 +49,8 @@ registrada na Spec 005.
 
 ## Superfície de autorização — em uma frase
 
-Admin cria, edita (exceto lançamentos `paid`) e exclui linhas de `transactions`
-exclusivamente via RPCs `security definer` com `app.is_admin()`; qualquer
-profile aprovado lê todos os lançamentos e os jogadores do elenco via
-`list_transactions`/`list_player_options` (`app.is_approved()`); ninguém escreve
-direto na tabela.
+Admin cria, edita (exceto lançamentos `paid`), exclui e gera em lote (mensalidades)
+linhas de `transactions` exclusivamente via RPCs `security definer` com
+`app.is_admin()`; qualquer profile aprovado lê todos os lançamentos e os
+jogadores do elenco via `list_transactions`/`list_player_options`
+(`app.is_approved()`); ninguém escreve direto na tabela.

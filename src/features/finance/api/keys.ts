@@ -13,3 +13,8 @@ export const transactionKeys = {
 export const playerOptionKeys = {
   all: ['finance', 'player-options'] as const,
 };
+
+export const monthlyFeesKeys = {
+  all: ['finance', 'monthly-fees'] as const,
+  preview: (month: number) => [...monthlyFeesKeys.all, 'preview', month] as const,
+};

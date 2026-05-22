@@ -733,6 +733,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      generate_monthly_fees: {
+        Args: { p_month: number }
+        Returns: {
+          generated: number
+          skipped: number
+        }[]
+      }
       get_player_detail: {
         Args: { p_target: string }
         Returns: {
@@ -854,6 +861,16 @@ export type Database = {
           status: Database["public"]["Enums"]["transaction_status"]
           transaction_type_id: string
           type_description: string
+        }[]
+      }
+      preview_monthly_fees: {
+        Args: { p_month: number }
+        Returns: {
+          already_generated_count: number
+          eligible_player_count: number
+          suggested_amount_cents: number
+          target_year: number
+          type_ok: boolean
         }[]
       }
       record_match_check_ins: {
